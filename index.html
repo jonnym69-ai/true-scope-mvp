@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>True Scope MVP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>True Scope — Start Creating Today</h1>
+            <p class="subtitle">Turn your idea into a tiny, buildable plan.</p>
+            <p class="intro">Turn your game idea into a tiny, buildable plan — or let True Scope suggest one.</p>
+        </header>
+        <main>
+            <div class="input-group">
+                <label for="idea">Describe your game idea:</label>
+                <textarea id="idea" rows="4" placeholder="Example: I want to make a cozy 2D farming game with crops and animals..."></textarea>
+            </div>
+            <p class="tip">Tip: Keep your idea simple — True Scope will handle the scope for you.</p>
+            <div class="input-group">
+                <label for="tool">What tool are you using?</label>
+                <select id="tool">
+                    <option value="Unity">Unity</option>
+                    <option value="Godot">Godot</option>
+                    <option value="Unreal">Unreal</option>
+                    <option value="Windsurf">Windsurf</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <h3 class="mode-title">Choose how you want to start:</h3>
+            <button id="generate">Generate Plan</button>
+            <button id="ideas">Give me an idea</button>
+            <button id="reset">Reset</button>
+            <div id="loading"><span class="dots">...</span></div>
+            <div id="output"></div>
+            <button id="copy">Copy Plan</button>
+            <div id="confirmation"></div>
+        <div id="share-section">
+            <h3>Share</h3>
+            <button id="share-page">Share True Scope</button>
+            <button id="share-output">Share This Plan</button>
+        </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
