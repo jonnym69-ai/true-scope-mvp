@@ -30,11 +30,11 @@ document.getElementById('generate').addEventListener('click', function() {
 
 document.getElementById('copy').addEventListener('click', function() {
     const output = document.getElementById('output');
-    const text = output.innerHTML.replace(/<[^>]*>/g, '');
+    const text = output.innerText;
     navigator.clipboard.writeText(text).then(() => {
         const conf = document.getElementById('confirmation');
-        conf.innerText = 'Plan copied!';
-        setTimeout(() => conf.innerText = '', 2000);
+        conf.innerHTML = '✅ Plan copied! <strong>Next steps:</strong> Save it somewhere, share it, or start building your game! 🎮';
+        setTimeout(() => conf.innerText = '', 5000);
     });
 });
 
@@ -417,4 +417,57 @@ document.getElementById('share-output').addEventListener('click', function() {
     }
 });
 
-document.getElementById('output').innerHTML = '<p>Your plan will appear here. Try typing an idea or click \'Give me an idea\' to start.</p>';
+document.getElementById('output').innerHTML = '<p>🎮 Your game plan will appear here! Type an idea above or click "💡 Give Me Game Ideas" to get started!</p>';
+
+// Voice input functionality
+const voiceBtn = document.getElementById('voice-btn');
+const voiceStatus = document.getElementById('voice-status');
+const ideaTextarea = document.getElementById('idea');
+
+// Check if browser supports speech recognition
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    
+    recognition.onstart = function() {
+        voiceBtn.classList.add('recording');
+        voiceStatus.textContent = '🎤 Listening... Speak now!';
+        voiceBtn.innerHTML = '⏹️';
+    };
+    
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        ideaTextarea.value = transcript;
+        voiceStatus.textContent = '✅ Voice input added!';
+        setTimeout(() => {
+            voiceStatus.textContent = '';
+        }, 2000);
+    };
+    
+    recognition.onerror = function(event) {
+        voiceStatus.textContent = '❌ Voice error: ' + event.error;
+        setTimeout(() => {
+            voiceStatus.textContent = '';
+        }, 3000);
+    };
+    
+    recognition.onend = function() {
+        voiceBtn.classList.remove('recording');
+        voiceBtn.innerHTML = '🎤';
+    };
+    
+    voiceBtn.addEventListener('click', function() {
+        if (voiceBtn.classList.contains('recording')) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    });
+} else {
+    voiceBtn.style.display = 'none';
+    voiceStatus.textContent = '📝 Voice input not supported in this browser';
+}

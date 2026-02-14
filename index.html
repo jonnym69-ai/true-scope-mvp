@@ -11,14 +11,21 @@
         <header>
             <h1>True Scope — Start Creating Today</h1>
             <p class="subtitle">Turn your idea into a tiny, buildable plan.</p>
-            <p class="intro">Turn your game idea into a tiny, buildable plan — or let True Scope suggest one.</p>
+            <p class="slogan">Making games made simple</p>
+            <p class="intro">Perfect for beginners! Just describe your game idea and get a step-by-step plan to start making your first game.</p>
         </header>
         <main>
             <div class="input-group">
                 <label for="idea">Describe your game idea:</label>
-                <textarea id="idea" rows="4" placeholder="Example: I want to make a cozy 2D farming game with crops and animals..."></textarea>
+                <div class="voice-input-container">
+                    <textarea id="idea" rows="4" placeholder="Example: I want to make a cozy 2D farming game with crops and animals..."></textarea>
+                    <button id="voice-btn" type="button" title="Click to speak your idea">
+                        🎤
+                    </button>
+                </div>
+                <div id="voice-status" class="voice-status"></div>
             </div>
-            <p class="tip">Tip: Keep your idea simple — True Scope will handle the scope for you.</p>
+            <p class="tip">💡 Pro tip: Keep your idea simple - like "jumping game" or "farm game". True Scope will create the perfect plan for you!</p>
             <div class="input-group">
                 <label for="tool">What tool are you using?</label>
                 <select id="tool">
@@ -29,18 +36,30 @@
                     <option value="Other">Other</option>
                 </select>
             </div>
-            <h3 class="mode-title">Choose how you want to start:</h3>
-            <button id="generate">Generate Plan</button>
-            <button id="ideas">Give me an idea</button>
-            <button id="reset">Reset</button>
+            <h3 class="mode-title">How would you like to start?</h3>
+            <button id="generate">🎮 Generate My Game Plan</button>
+            <button id="ideas">💡 Give Me Game Ideas</button>
+            <button id="reset">🔄 Clear Everything</button>
             <div id="loading"><span class="dots">...</span></div>
             <div id="output"></div>
-            <button id="copy">Copy Plan</button>
+            <button id="copy">📋 Copy My Plan</button>
             <div id="confirmation"></div>
         <div id="share-section">
             <h3>Share</h3>
             <button id="share-page">Share True Scope</button>
             <button id="share-output">Share This Plan</button>
+        </div>
+        <div id="next-steps">
+            <h3>🎯 What to do next?</h3>
+            <p><strong>After copying your plan:</strong></p>
+            <ol>
+                <li><strong>Save it:</strong> Paste into a document or note-taking app</li>
+                <li><strong>Share it:</strong> Send to friends or post online</li>
+                <li><strong>Start building:</strong> Follow the "Start Here" step in your plan</li>
+                <li><strong>Learn more:</strong> Watch tutorials for your chosen tool</li>
+                <li><strong>Have fun!</strong> Game development is a journey - enjoy the process!</li>
+            </ol>
+            <p class="encouragement">💡 Remember: Every pro game developer started with a tiny first game!</p>
         </div>
         </main>
     </div>
