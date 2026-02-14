@@ -1,0 +1,12 @@
+{
+  "name": "true-scope-mvp",
+  "version": "1.0.0",
+  "description": "A tool that turns game ideas into tiny, buildable plans",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000"
+  },
+  "keywords": ["game", "development", "planning", "mvp"],
+  "author": "True Scope",
+  "license": "MIT"
+}
