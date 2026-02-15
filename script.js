@@ -385,7 +385,7 @@ function generateIdeas() {
 document.getElementById('ideas').addEventListener('click', generateIdeas);
 
 document.getElementById('share-page').addEventListener('click', function() {
-    const url = 'https://true-scope-mvp.vercel.app/';
+    const url = 'https://twitter.com/intent/tweet?text=Check%20out%20True%20Scope%20-%20a%20tool%20that%20turns%20game%20ideas%20into%20tiny%20buildable%20plans!%20https://true-scope-mvp.vercel.app/';
     try {
         window.open(url, '_blank');
     } catch {
