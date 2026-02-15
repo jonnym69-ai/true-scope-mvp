@@ -385,11 +385,11 @@ function generateIdeas() {
 document.getElementById('ideas').addEventListener('click', generateIdeas);
 
 document.getElementById('share-page').addEventListener('click', function() {
-    const url = 'https://true-scope-9vdxwobka-jonnys-projects-1bda5611.vercel.app/';
+    const url = 'https://true-scope-mvp.vercel.app/';
     try {
         window.open(url, '_blank');
     } catch {
-        navigator.clipboard.writeText('Check out True Scope - a tool that turns game ideas into tiny buildable plans! https://true-scope-9vdxwobka-jonnys-projects-1bda5611.vercel.app/').then(() => {
+        navigator.clipboard.writeText('Check out True Scope - a tool that turns game ideas into tiny buildable plans! https://true-scope-mvp.vercel.app/').then(() => {
             const conf = document.getElementById('confirmation');
             conf.innerText = 'Share text copied to clipboard!';
             setTimeout(() => conf.innerText = '', 2000);
