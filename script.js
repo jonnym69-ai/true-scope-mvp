@@ -1,9 +1,30 @@
+// Global user state
+let currentUser = null;
+let userSubscription = null;
+let userUsageToday = 0;
+const DAILY_LIMIT_FREE = 3;
+
 document.getElementById('generate').addEventListener('click', function() {
+    // Check if user is logged in
+    if (!currentUser) {
+        showAuthModal();
+        return;
+    }
+    
+    // Check usage limits for free users
+    if (userSubscription === 'free' && userUsageToday >= DAILY_LIMIT_FREE) {
+        const conf = document.getElementById('confirmation');
+        conf.innerHTML = '⚠️ Daily limit reached! <a href="#" onclick="document.getElementById(\'upgrade-btn\').click()">Upgrade to Pro</a> for unlimited plans.';
+        setTimeout(() => conf.innerText = '', 8000);
+        return;
+    }
+    
     const generateBtn = document.getElementById('generate');
     generateBtn.disabled = true;
     generateBtn.textContent = 'Thinking...';
     document.getElementById('loading').style.display = 'block';
-    setTimeout(() => {
+    
+    setTimeout(async () => {
         const idea = document.getElementById('idea').value.toLowerCase();
         const tool = document.getElementById('tool').value;
         let planType = 'generic';
@@ -24,7 +45,18 @@ document.getElementById('generate').addEventListener('click', function() {
         document.getElementById('output').innerHTML = plan;
         document.getElementById('loading').style.display = 'none';
         generateBtn.disabled = false;
-        generateBtn.textContent = 'Generate Plan';
+        generateBtn.textContent = '🎮 Generate My Game Plan';
+        
+        // Update usage
+        userUsageToday++;
+        await updateUserData({ 
+            usageToday: userUsageToday,
+            totalUsage: (await getUserData('totalUsage') || 0) + 1,
+            lastUsageDate: new Date().toDateString()
+        });
+        
+        // Update UI
+        updateUIForUser();
     }, 600);
 });
 
@@ -471,3 +503,258 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     voiceBtn.style.display = 'none';
     voiceStatus.textContent = '📝 Voice input not supported in this browser';
 }
+
+// ===== FREEMIUM AUTHENTICATION & USER MANAGEMENT =====
+
+// Initialize app when Firebase loads
+window.addEventListener('load', () => {
+    // Wait for Firebase to be available
+    setTimeout(() => {
+        if (window.firebaseAuth) {
+            initializeAuth();
+        } else {
+            console.error('Firebase not loaded');
+        }
+    }, 1000);
+});
+
+// Initialize authentication
+function initializeAuth() {
+    const { onAuthStateChanged } = window.firebaseFunctions;
+    
+    onAuthStateChanged(window.firebaseAuth, async (user) => {
+        currentUser = user;
+        
+        if (user) {
+            // User is signed in
+            await loadUserData();
+            showMainApp();
+        } else {
+            // User is signed out
+            showAuthModal();
+        }
+    });
+}
+
+// Load user data from Firestore
+async function loadUserData() {
+    if (!currentUser) return;
+    
+    try {
+        const { doc, getDoc } = window.firebaseFunctions;
+        const userDoc = await getDoc(doc(window.firebaseDb, 'users', currentUser.uid));
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            userSubscription = userData.subscription || 'free';
+            userUsageToday = userData.usageToday || 0;
+            
+            // Reset usage if it's a new day
+            const lastUsageDate = userData.lastUsageDate;
+            const today = new Date().toDateString();
+            if (lastUsageDate !== today) {
+                userUsageToday = 0;
+                await updateUserData({ usageToday: 0, lastUsageDate: today });
+            }
+        } else {
+            // New user
+            await createUserData();
+        }
+        
+        updateUIForUser();
+    } catch (error) {
+        console.error('Error loading user data:', error);
+    }
+}
+
+// Create new user data
+async function createUserData() {
+    const { setDoc, doc } = window.firebaseFunctions;
+    const userData = {
+        email: currentUser.email,
+        subscription: 'free',
+        usageToday: 0,
+        totalUsage: 0,
+        createdAt: new Date(),
+        lastUsageDate: new Date().toDateString()
+    };
+    
+    await setDoc(doc(window.firebaseDb, 'users', currentUser.uid), userData);
+    userSubscription = 'free';
+    userUsageToday = 0;
+}
+
+// Update user data in Firestore
+async function updateUserData(updates) {
+    if (!currentUser) return;
+    
+    const { updateDoc, doc } = window.firebaseFunctions;
+    await updateDoc(doc(window.firebaseDb, 'users', currentUser.uid), updates);
+}
+
+// Get specific user data field
+async function getUserData(field) {
+    if (!currentUser) return null;
+    
+    try {
+        const { doc, getDoc } = window.firebaseFunctions;
+        const userDoc = await getDoc(doc(window.firebaseDb, 'users', currentUser.uid));
+        return userDoc.exists() ? userDoc.data()[field] : null;
+    } catch (error) {
+        console.error('Error getting user data:', error);
+        return null;
+    }
+}
+
+// Update UI based on user state
+function updateUIForUser() {
+    // Update premium banner
+    const banner = document.getElementById('premium-banner');
+    if (userSubscription === 'free') {
+        banner.style.display = 'block';
+    } else {
+        banner.style.display = 'none';
+    }
+    
+    // Add user account info
+    addUserAccountUI();
+    
+    // Add usage limits for free users
+    if (userSubscription === 'free') {
+        addUsageLimitUI();
+    }
+    
+    // Gate premium features
+    gatePremiumFeatures();
+}
+
+// Add user account UI
+function addUserAccountUI() {
+    // Remove existing account UI
+    const existing = document.querySelector('.user-account');
+    if (existing) existing.remove();
+    
+    if (!currentUser) return;
+    
+    const accountDiv = document.createElement('div');
+    accountDiv.className = 'user-account';
+    accountDiv.innerHTML = `
+        <div class="user-info">${currentUser.email} (${userSubscription})</div>
+        <button class="logout-btn" onclick="logoutUser()">Logout</button>
+    `;
+    
+    document.querySelector('.container').appendChild(accountDiv);
+}
+
+// Add usage limit UI for free users
+function addUsageLimitUI() {
+    const existing = document.querySelector('.usage-limit');
+    if (existing) existing.remove();
+    
+    const remaining = DAILY_LIMIT_FREE - userUsageToday;
+    if (remaining <= 0) {
+        const limitDiv = document.createElement('div');
+        limitDiv.className = 'usage-limit';
+        limitDiv.innerHTML = '⚠️ Daily limit reached! <a href="#" onclick="upgradeToPro()">Upgrade to Pro</a> for unlimited plans.';
+        document.querySelector('main').insertBefore(limitDiv, document.querySelector('main').firstChild);
+    } else {
+        const limitDiv = document.createElement('div');
+        limitDiv.className = 'usage-limit';
+        limitDiv.innerHTML = `📊 ${remaining} free plans remaining today`;
+        document.querySelector('main').insertBefore(limitDiv, document.querySelector('main').firstChild);
+    }
+}
+
+// Gate premium features
+function gatePremiumFeatures() {
+    // PDF export button (will be added later)
+    // For now, just update the copy button behavior
+    const copyBtn = document.getElementById('copy');
+    if (userSubscription === 'free') {
+        copyBtn.title = 'Copy to clipboard (Pro users get PDF export)';
+    } else {
+        copyBtn.title = 'Copy to clipboard';
+    }
+}
+
+// Show auth modal
+function showAuthModal() {
+    document.getElementById('auth-modal').style.display = 'flex';
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('premium-banner').style.display = 'none';
+}
+
+// Show main app
+function showMainApp() {
+    document.getElementById('auth-modal').style.display = 'none';
+    document.querySelector('.container').style.display = 'block';
+}
+
+// Logout user
+function logoutUser() {
+    const { signOut } = window.firebaseFunctions;
+    signOut(window.firebaseAuth).then(() => {
+        currentUser = null;
+        userSubscription = null;
+        userUsageToday = 0;
+        location.reload(); // Refresh to reset UI
+    }).catch((error) => {
+        console.error('Logout error:', error);
+    });
+}
+
+// Upgrade to Pro (placeholder)
+function upgradeToPro() {
+    alert('Stripe integration coming soon! For now, contact support to upgrade.');
+}
+
+// Auth event handlers
+document.addEventListener('DOMContentLoaded', () => {
+    // Login form
+    document.getElementById('login-btn').addEventListener('click', async () => {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        
+        try {
+            const { signInWithEmailAndPassword } = window.firebaseFunctions;
+            await signInWithEmailAndPassword(window.firebaseAuth, email, password);
+            document.getElementById('auth-error').style.display = 'none';
+        } catch (error) {
+            document.getElementById('auth-error').style.display = 'block';
+            document.getElementById('auth-error').textContent = error.message;
+        }
+    });
+    
+    // Signup form
+    document.getElementById('signup-btn').addEventListener('click', async () => {
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        
+        try {
+            const { createUserWithEmailAndPassword } = window.firebaseFunctions;
+            await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+            document.getElementById('auth-error').style.display = 'none';
+        } catch (error) {
+            document.getElementById('auth-error').style.display = 'block';
+            document.getElementById('auth-error').textContent = error.message;
+        }
+    });
+    
+    // Form switching
+    document.getElementById('show-signup').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('signup-form').style.display = 'block';
+    });
+    
+    document.getElementById('show-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('signup-form').style.display = 'none';
+        document.getElementById('login-form').style.display = 'block';
+    });
+    
+    // Upgrade button
+    document.getElementById('upgrade-btn').addEventListener('click', () => {
+        upgradeToPro();
+    });
+});

@@ -6,8 +6,67 @@
     <title>True Scope MVP</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="style-simple.css?v=3">
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "your-api-key",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Make these available globally
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+        window.firebaseFunctions = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, limit };
+    </script>
 </head>
 <body>
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="auth-modal" style="display: none;">
+        <div class="auth-modal-content">
+            <h2>Welcome to True Scope!</h2>
+            <div id="auth-forms">
+                <div id="login-form">
+                    <h3>Sign In</h3>
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button id="login-btn">Sign In</button>
+                    <p>Don't have an account? <a href="#" id="show-signup">Sign Up</a></p>
+                </div>
+                <div id="signup-form" style="display: none;">
+                    <h3>Create Account</h3>
+                    <input type="email" id="signup-email" placeholder="Email" required>
+                    <input type="password" id="signup-password" placeholder="Password" required>
+                    <button id="signup-btn">Create Account</button>
+                    <p>Already have an account? <a href="#" id="show-login">Sign In</a></p>
+                </div>
+            </div>
+            <div id="auth-error" class="auth-error" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Premium Banner -->
+    <div id="premium-banner" class="premium-banner" style="display: none;">
+        <div class="premium-banner-content">
+            <h3>🎮 Upgrade to Pro!</h3>
+            <p>Get unlimited plans, PDF export, and advanced features</p>
+            <button id="upgrade-btn" class="upgrade-btn">Upgrade Now - $4.99/month</button>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <h1>True Scope — Start Creating Today</h1>
