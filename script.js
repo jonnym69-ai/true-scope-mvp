@@ -504,6 +504,67 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     voiceStatus.textContent = '📝 Voice input not supported in this browser';
 }
 
+// ===== STRIPE PAYMENT INTEGRATION =====
+
+// Initialize Stripe with your publishable key
+// Replace with your actual Stripe publishable key
+const stripe = Stripe('pk_test_YOUR_STRIPE_PUBLISHABLE_KEY');
+
+// Create Stripe checkout session
+async function createStripeCheckout() {
+    try {
+        const response = await fetch('https://your-stripe-backend-url.com/create-checkout-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                priceId: 'price_1O2H3R2eZvKYlo2C5xL2Z', // Pro subscription price ID
+                successUrl: window.location.origin + '/success.html',
+                cancelUrl: window.location.origin + '/cancel.html',
+            }),
+        });
+        
+        const session = await response.json();
+        
+        // Redirect to Stripe Checkout
+        const result = await stripe.redirectToCheckout({ sessionId: session.id });
+        
+        if (result.error) {
+            console.error('Stripe error:', result.error.message);
+            alert('Payment failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Checkout error:', error);
+        alert('Unable to start payment. Please try again.');
+    }
+}
+
+// Upgrade to Pro function
+async function upgradeToPro() {
+    if (!currentUser) {
+        alert('Please sign in first to upgrade to Pro!');
+        return;
+    }
+    
+    // Show loading state
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    const originalText = upgradeBtn.textContent;
+    upgradeBtn.textContent = 'Loading...';
+    upgradeBtn.disabled = true;
+    
+    try {
+        await createStripeCheckout();
+    } catch (error) {
+        console.error('Upgrade error:', error);
+        alert('Payment failed. Please try again.');
+    } finally {
+        // Restore button state
+        upgradeBtn.textContent = originalText;
+        upgradeBtn.disabled = false;
+    }
+}
+
 // ===== FREEMIUM AUTHENTICATION & USER MANAGEMENT =====
 
 // Initialize app when Firebase loads
@@ -706,6 +767,67 @@ function logoutUser() {
 // Upgrade to Pro (placeholder)
 function upgradeToPro() {
     alert('Stripe integration coming soon! For now, contact support to upgrade.');
+}
+
+// ===== STRIPE PAYMENT INTEGRATION =====
+
+// Initialize Stripe with your publishable key
+// Replace with your actual Stripe publishable key
+const stripe = Stripe('pk_test_YOUR_STRIPE_PUBLISHABLE_KEY');
+
+// Create Stripe checkout session
+async function createStripeCheckout() {
+    try {
+        const response = await fetch('https://your-stripe-backend-url.com/create-checkout-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                priceId: 'price_1O2H3R2eZvKYlo2C5xL2Z', // Pro subscription price ID
+                successUrl: window.location.origin + '/success.html',
+                cancelUrl: window.location.origin + '/cancel.html',
+            }),
+        });
+        
+        const session = await response.json();
+        
+        // Redirect to Stripe Checkout
+        const result = await stripe.redirectToCheckout({ sessionId: session.id });
+        
+        if (result.error) {
+            console.error('Stripe error:', result.error.message);
+            alert('Payment failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Checkout error:', error);
+        alert('Unable to start payment. Please try again.');
+    }
+}
+
+// Real upgrade to Pro function
+async function realUpgradeToPro() {
+    if (!currentUser) {
+        alert('Please sign in first to upgrade to Pro!');
+        return;
+    }
+    
+    // Show loading state
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    const originalText = upgradeBtn.textContent;
+    upgradeBtn.textContent = 'Loading...';
+    upgradeBtn.disabled = true;
+    
+    try {
+        await createStripeCheckout();
+    } catch (error) {
+        console.error('Upgrade error:', error);
+        alert('Payment failed. Please try again.');
+    } finally {
+        // Restore button state
+        upgradeBtn.textContent = originalText;
+        upgradeBtn.disabled = false;
+    }
 }
 
 // Auth event handlers

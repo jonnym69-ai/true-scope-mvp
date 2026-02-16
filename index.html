@@ -11,7 +11,7 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
+        
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDtori3VbCtdFolmgAVXgsdC7kSReY5Hsk",
@@ -33,6 +33,8 @@
         window.firebaseDb = db;
         window.firebaseFunctions = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, limit };
     </script>
+    <!-- Stripe SDK -->
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <!-- Auth Modal -->
