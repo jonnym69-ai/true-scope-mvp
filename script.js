@@ -603,6 +603,76 @@ function generateIdeas() {
 
 document.getElementById('ideas').addEventListener('click', generateIdeas);
 
+document.getElementById('view-portfolio').addEventListener('click', function() {
+    if (!currentUser) {
+        showAuthModal();
+        return;
+    }
+    
+    if (userSubscription === 'free') {
+        alert('Viewing your portfolio is a Premium feature. Upgrade to access your saved game plans!');
+        document.getElementById('upgrade-btn').click();
+        return;
+    }
+    
+    showPortfolioModal();
+});
+
+document.getElementById('save-plan').addEventListener('click', async function() {
+    const output = document.getElementById('output');
+    const confirmation = document.getElementById('confirmation');
+    
+    if (!currentUser) {
+        confirmation.innerText = 'Please sign in to save plans!';
+        setTimeout(() => confirmation.innerText = '', 3000);
+        return;
+    }
+    
+    if (userSubscription === 'free') {
+        confirmation.innerHTML = 'Saving plans to portfolio is a Premium feature! <a href="#" onclick="document.getElementById(\'upgrade-btn\').click()">Upgrade now</a> to save and organize your game plans.';
+        setTimeout(() => confirmation.innerText = '', 5000);
+        return;
+    }
+    
+    if (output.innerText.trim() === '' || output.innerText === 'Your plan will appear here. Try typing an idea or click \'Give me an idea\' to start.') {
+        confirmation.innerText = 'No plan to save! Generate a plan first.';
+        setTimeout(() => confirmation.innerText = '', 3000);
+        return;
+    }
+    
+    try {
+        // Get plan title from user
+        const planTitle = prompt('Enter a name for this plan:', 'My Game Plan');
+        if (!planTitle || planTitle.trim() === '') {
+            confirmation.innerText = 'Plan not saved - no title provided.';
+            setTimeout(() => confirmation.innerText = '', 3000);
+            return;
+        }
+        
+        // Save plan to Firestore
+        const planData = {
+            title: planTitle.trim(),
+            content: output.innerHTML,
+            textContent: output.innerText,
+            idea: document.getElementById('idea').value,
+            tool: document.getElementById('tool').value,
+            format: document.getElementById('plan-format') ? document.getElementById('plan-format').value : 'standard',
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+        
+        await savePlanToPortfolio(planData);
+        
+        confirmation.innerText = `✅ Plan "${planTitle}" saved to your portfolio!`;
+        setTimeout(() => confirmation.innerText = '', 3000);
+        
+    } catch (error) {
+        console.error('Error saving plan:', error);
+        confirmation.innerText = '❌ Failed to save plan. Please try again.';
+        setTimeout(() => confirmation.innerText = '', 3000);
+    }
+});
+
 document.getElementById('business-intelligence').addEventListener('click', function() {
     // Check if user is logged in
     if (!currentUser) {
@@ -638,6 +708,8 @@ document.getElementById('business-intelligence').addEventListener('click', funct
         generateBtn.disabled = false;
     }, 600);
 });
+
+document.getElementById('share-page').addEventListener('click', function() {
     const url = 'https://twitter.com/intent/tweet?text=Check%20out%20True%20Scope%20-%20a%20tool%20that%20turns%20game%20ideas%20into%20tiny%20buildable%20plans!%20https://true-scope-mvp.vercel.app/';
     try {
         window.open(url, '_blank');
@@ -727,101 +799,206 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
 // ===== BUSINESS INTELLIGENCE ANALYSIS =====
 
-async function generateBusinessIntelligence(userIdea, tool) {
+// ===== PORTFOLIO MANAGEMENT =====
+
+// Save plan to user's portfolio in Firestore
+async function savePlanToPortfolio(planData) {
+    if (!currentUser) throw new Error('User not authenticated');
+    
+    const { collection, addDoc } = window.firebaseFunctions;
+    
+    // Save to user's plans subcollection
+    const plansRef = collection(window.firebaseDb, 'users', currentUser.uid, 'plans');
+    
+    await addDoc(plansRef, {
+        ...planData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+    });
+}
+
+// Load user's portfolio plans
+async function loadUserPortfolio() {
+    if (!currentUser) return [];
+    
     try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const { collection, query, orderBy, getDocs } = window.firebaseFunctions;
+        const plansRef = collection(window.firebaseDb, 'users', currentUser.uid, 'plans');
+        const q = query(plansRef, orderBy('createdAt', 'desc'));
+        
+        const querySnapshot = await getDocs(q);
+        const plans = [];
+        
+        querySnapshot.forEach((doc) => {
+            plans.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        return plans;
+    } catch (error) {
+        console.error('Error loading portfolio:', error);
+        return [];
+    }
+}
+
+// Display portfolio modal for premium users
+function showPortfolioModal() {
+    // Create portfolio modal if it doesn't exist
+    let portfolioModal = document.getElementById('portfolio-modal');
+    if (!portfolioModal) {
+        portfolioModal = document.createElement('div');
+        portfolioModal.id = 'portfolio-modal';
+        portfolioModal.className = 'portfolio-modal';
+        portfolioModal.innerHTML = `
+            <div class="portfolio-modal-content">
+                <h2>🎮 Your Game Plan Portfolio</h2>
+                <div id="portfolio-list">
+                    <p>Loading your plans...</p>
+                </div>
+                <button id="close-portfolio">Close</button>
+            </div>
+        `;
+        document.body.appendChild(portfolioModal);
+        
+        // Add close handler
+        document.getElementById('close-portfolio').addEventListener('click', () => {
+            portfolioModal.style.display = 'none';
+        });
+    }
+    
+    // Load and display portfolio
+    loadUserPortfolio().then(plans => {
+        const portfolioList = document.getElementById('portfolio-list');
+        
+        if (plans.length === 0) {
+            portfolioList.innerHTML = '<p>You haven\'t saved any plans yet. Generate and save some plans to build your portfolio!</p>';
+        } else {
+            let html = `<p>You have ${plans.length} saved plan${plans.length > 1 ? 's' : ''}:</p><br>`;
+            
+            plans.forEach(plan => {
+                const createdDate = new Date(plan.createdAt.seconds * 1000).toLocaleDateString();
+                html += `
+                    <div class="portfolio-item">
+                        <h3>${plan.title}</h3>
+                        <p><strong>Idea:</strong> ${plan.idea || 'N/A'}</p>
+                        <p><strong>Tool:</strong> ${plan.tool || 'N/A'}</p>
+                        <p><strong>Format:</strong> ${plan.format || 'standard'}</p>
+                        <p><strong>Created:</strong> ${createdDate}</p>
+                        <div class="portfolio-actions">
+                            <button onclick="viewPortfolioPlan('${plan.id}')">👁️ View</button>
+                            <button onclick="deletePortfolioPlan('${plan.id}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <hr>
+                `;
+            });
+            
+            portfolioList.innerHTML = html;
+        }
+    });
+    
+    portfolioModal.style.display = 'flex';
+}
+
+// View a specific plan from portfolio
+async function viewPortfolioPlan(planId) {
+    try {
+        const plans = await loadUserPortfolio();
+        const plan = plans.find(p => p.id === planId);
+        
+        if (plan) {
+            document.getElementById('output').innerHTML = plan.content;
+            document.getElementById('portfolio-modal').style.display = 'none';
+            document.getElementById('confirmation').innerText = `Loaded "${plan.title}" from your portfolio!`;
+            setTimeout(() => document.getElementById('confirmation').innerText = '', 3000);
+        }
+    } catch (error) {
+        console.error('Error viewing plan:', error);
+        alert('Failed to load plan. Please try again.');
+    }
+}
+
+// Delete a plan from portfolio
+async function deletePortfolioPlan(planId) {
+    if (!confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const { doc, deleteDoc } = window.firebaseFunctions;
+        const planRef = doc(window.firebaseDb, 'users', currentUser.uid, 'plans', planId);
+        
+        await deleteDoc(planRef);
+        
+        // Refresh portfolio view
+        showPortfolioModal();
+        
+        document.getElementById('confirmation').innerText = 'Plan deleted from portfolio!';
+        setTimeout(() => document.getElementById('confirmation').innerText = '', 3000);
+        
+    } catch (error) {
+        console.error('Error deleting plan:', error);
+        alert('Failed to delete plan. Please try again.');
+    }
+}
+
+// Handle subscription tier dropdown changes
+document.getElementById('subscription-tier').addEventListener('change', function(e) {
+    const selectedTier = e.target.value;
+    updateUserSubscription(selectedTier);
+    
+    if (selectedTier !== 'free') {
+        document.getElementById('confirmation').innerText = `✅ Switched to ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} plan!`;
+        setTimeout(() => document.getElementById('confirmation').innerText = '', 3000);
+    }
+});
+
+// Update upgrade button to handle real Stripe checkout
+document.getElementById('upgrade-btn').addEventListener('click', async function() {
+    const selectedTier = document.getElementById('subscription-tier').value;
+    
+    if (selectedTier === 'free') {
+        alert('Please select a premium plan to upgrade!');
+        return;
+    }
+    
+    try {
+        // Show loading
+        this.disabled = true;
+        this.innerText = 'Processing...';
+        
+        // Call Stripe checkout session API
+        const response = await fetch('/api/create-checkout-session', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer YOUR_OPENAI_API_KEY` // Replace with actual key
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a senior gaming industry analyst and business consultant specializing in indie game market analysis, revenue projections, and competitive intelligence. Provide comprehensive, data-driven business intelligence reports for indie game developers.'
-                    },
-                    {
-                        role: 'user',
-                        content: `Create a comprehensive Business Intelligence Analysis for this game concept:
-
-GAME IDEA: "${userIdea}"
-DEVELOPMENT TOOL: ${tool}
-
-Please structure this analysis as a professional business intelligence report with these sections:
-
-📊 MARKET ANALYSIS
-- Market size and growth projections (2024-2028)
-- Key market trends and drivers
-- Regional market opportunities
-- Market segmentation analysis
-
-👥 TARGET AUDIENCE ANALYSIS
-- Primary target demographics (age, gender, location)
-- Secondary audience segments
-- Player psychographics and motivations
-- User acquisition channels
-
-🏆 COMPETITIVE LANDSCAPE
-- Direct competitors analysis (3-5 key games)
-- Indirect competitors and market alternatives
-- Competitive advantages and differentiation
-- Market positioning strategy
-
-💰 REVENUE PROJECTIONS
-- Year 1 revenue projections (conservative/realistic/optimistic)
-- Year 2-3 growth projections
-- Revenue breakdown by source (app stores, ads, IAP, etc.)
-- Unit economics analysis
-
-📈 MONETIZATION STRATEGY
-- Recommended pricing strategy
-- In-app purchase opportunities
-- Advertising integration potential
-- Subscription/donation models
-
-🎯 GO-TO-MARKET STRATEGY
-- Launch timeline recommendations
-- Marketing channel prioritization
-- Community building strategy
-- Partnership opportunities
-
-⚠️ RISK ASSESSMENT
-- Technical development risks
-- Market adoption risks
-- Financial risks and mitigation
-- Competitive response risks
-
-📋 SUCCESS METRICS & KPIs
-- Key performance indicators to track
-- User acquisition cost targets
-- Retention and engagement goals
-- Financial milestones
-
-Format this as a comprehensive business intelligence report with data-driven insights, realistic projections, and actionable recommendations. Include specific numbers, percentages, and market data where appropriate.`
-                    }
-                ],
-                max_tokens: 3000,
-                temperature: 0.7
+                tier: selectedTier,
+                userId: currentUser ? currentUser.uid : null
             })
         });
         
         if (!response.ok) {
-            throw new Error('AI service unavailable');
+            throw new Error('Failed to create checkout session');
         }
         
-        const data = await response.json();
-        const biReport = data.choices[0].message.content;
+        const { url } = await response.json();
         
-        // Format AI response as HTML
-        return `<h2>📊 Business Intelligence Analysis</h2><br><br><div class="business-intelligence-report">${biReport}</div>`;
+        // Redirect to Stripe Checkout
+        window.location.href = url;
+        
     } catch (error) {
-        return `<h2>🤖 Business Intelligence Service Unavailable</h2><br><br><p>Sorry, the business intelligence analysis service is currently unavailable. Please try again later.</p>`;
+        console.error('Error creating checkout session:', error);
+        alert('Failed to start checkout. Please try again.');
+        
+        // Reset button
+        this.disabled = false;
+        this.innerText = 'Upgrade Now';
     }
-}
-
-document.getElementById('upgrade-btn').addEventListener('click', upgradeToPro);
+});
 
 // ===== FREEMIUM AUTHENTICATION & USER MANAGEMENT =====
 
@@ -941,13 +1118,19 @@ function updateUIForUser() {
     // Show/hide premium features
     const formatSelection = document.getElementById('format-selection');
     const businessIntelligenceBtn = document.getElementById('business-intelligence');
+    const savePlanBtn = document.getElementById('save-plan');
+    const viewPortfolioBtn = document.getElementById('view-portfolio');
     
     if (userSubscription === 'premium' || userSubscription === 'pro') {
         formatSelection.style.display = 'block';
         businessIntelligenceBtn.style.display = 'block';
+        savePlanBtn.style.display = 'block';
+        viewPortfolioBtn.style.display = 'block';
     } else {
         formatSelection.style.display = 'none';
         businessIntelligenceBtn.style.display = 'none';
+        savePlanBtn.style.display = 'none';
+        viewPortfolioBtn.style.display = 'none';
     }
     
     // Add user account info

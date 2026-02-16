@@ -83,7 +83,7 @@
         <div class="premium-banner-content">
             <h3>🎮 Upgrade to Pro!</h3>
             <p>Get unlimited plans, PDF export, and advanced features</p>
-            <button id="upgrade-btn" class="upgrade-btn">Upgrade Now - $4.99/month</button>
+            <button id="banner-upgrade-btn" class="upgrade-btn">Upgrade Now - $4.99/month</button>
         </div>
     </div>
 
@@ -133,15 +133,30 @@
             <button id="generate">🎮 Generate My Game Plan</button>
             <button id="ideas">💡 Give Me Game Ideas</button>
             <button id="business-intelligence">📊 Business Intelligence Analysis</button>
+            <button id="view-portfolio">📁 View Portfolio</button>
             <button id="reset">🔄 Clear Everything</button>
             <div id="loading"><span class="dots">...</span></div>
             <div id="output"></div>
             <button id="copy">📋 Copy My Plan</button>
+            <button id="save-plan">💾 Save to Portfolio</button>
             <div id="confirmation"></div>
-            <div id="share-section">
-                <h3>Share</h3>
-                <button id="share-page">Share True Scope</button>
-                <button id="share-output">Share This Plan</button>
+            <div id="auth-section">
+                <button id="auth-btn">Sign In</button>
+                <button id="logout-btn">Sign Out</button>
+                <span id="user-info"></span>
+            </div>
+
+            <!-- Subscription Tier Selection -->
+            <div id="tier-selection" class="input-group">
+                <label for="subscription-tier">Choose Your Plan</label>
+                <select id="subscription-tier">
+                    <option value="free">Free - 3 plans/day</option>
+                    <option value="premium">$4.99/month - Unlimited Premium Plans</option>
+                    <option value="pro">$9.99/month - Pro Features + Business Intelligence</option>
+                    <option value="studio">$19.99/month - Studio Suite + Portfolio</option>
+                    <option value="enterprise">$49.99/month - Enterprise + Analytics</option>
+                </select>
+                <button id="upgrade-btn">Upgrade Now</button>
             </div>
             <div id="next-steps">
                 <h3>🎯 What to do next?</h3>
