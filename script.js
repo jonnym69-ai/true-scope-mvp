@@ -84,6 +84,348 @@ document.getElementById('reset').addEventListener('click', function() {
 
 async function generatePlan(userIdea, planType, tool) {
     try {
+        // Check user subscription for premium features
+        const isPremium = userSubscription === 'premium' || userSubscription === 'pro';
+
+        // Get selected format (default to standard for free users)
+        const selectedFormat = isPremium ? document.getElementById('plan-format').value : 'standard';
+
+        // Enhanced professional prompt for premium users
+        const systemPrompt = isPremium ?
+            'You are a senior game development consultant and technical director. Create comprehensive, professional-quality game development plans suitable for indie studios and professional teams. Include detailed technical specifications, realistic timelines, budget estimates, risk assessments, and business considerations. Structure plans like industry-standard game design documents.' :
+            'You are a game development expert. Create detailed, actionable game development plans for indie developers. Focus on tiny, achievable scopes that can be built in 1-2 weeks. Include technical advice, timeline, and folder structure.';
+
+        // Format-specific prompts for premium users
+        let userPrompt;
+        if (isPremium) {
+            switch (selectedFormat) {
+                case 'technical':
+                    userPrompt = `Create a detailed Technical Specification Document for: "${userIdea}"
+
+GAME TYPE: ${planType}
+DEVELOPMENT TOOL: ${tool}
+
+Structure as a Technical Spec with:
+🔧 SYSTEM REQUIREMENTS
+- Minimum & Recommended Hardware Specs
+- Software Dependencies
+- Development Environment Setup
+
+🏗️ ARCHITECTURE DESIGN
+- High-level System Architecture
+- Component Breakdown
+- Data Flow Diagrams (described in text)
+- API Design & Integration Points
+
+🎮 GAME SYSTEMS SPECIFICATION
+- Core Gameplay Systems
+- Physics & Collision Systems
+- Audio System Requirements
+- UI/UX Technical Requirements
+
+📊 PERFORMANCE TARGETS
+- Frame Rate Requirements (FPS)
+- Load Times & Optimization Goals
+- Memory Usage Limits
+- Platform-Specific Considerations
+
+🧪 TESTING & QA SPECIFICATIONS
+- Unit Testing Requirements
+- Integration Testing Plan
+- Performance Testing Criteria
+- Bug Tracking & Resolution Process
+
+Format this as a professional technical specification document.`;
+                    break;
+
+                case 'pitch':
+                    userPrompt = `Create a compelling Pitch Deck presentation for: "${userIdea}"
+
+GAME TYPE: ${planType}
+DEVELOPMENT TOOL: ${tool}
+
+Structure as a 10-15 slide pitch deck with these sections:
+
+📈 SLIDE 1: TITLE & HOOK
+- Catchy game title
+- One-sentence description
+- Visual concept
+
+🎯 SLIDE 2: PROBLEM & SOLUTION
+- Market gap or player pain point
+- How your game solves it
+- Unique value proposition
+
+👥 SLIDE 3: TARGET AUDIENCE
+- Primary player demographics
+- Secondary audiences
+- Market size estimates
+
+🎮 SLIDE 4: GAME MECHANICS
+- Core gameplay loop
+- Key features (3-5 main ones)
+- Player progression
+
+💰 SLIDE 5: MONETIZATION STRATEGY
+- Revenue model (ads, IAP, subscriptions, etc.)
+- Pricing strategy
+- Projected revenue streams
+
+📊 SLIDE 6: MARKET ANALYSIS
+- Competitive landscape
+- Market trends
+- Your competitive advantage
+
+👨‍💼 SLIDE 7: TEAM & DEVELOPMENT
+- Key team members
+- Development timeline
+- Technology stack
+
+📈 SLIDE 8: FINANCIAL PROJECTIONS
+- Development budget
+- Launch timeline
+- Revenue projections (3-year)
+
+🎯 SLIDE 9: MARKETING & LAUNCH PLAN
+- Marketing strategy
+- Launch platforms
+- Go-to-market timeline
+
+🏆 SLIDE 10: CALL TO ACTION
+- Investment ask (if applicable)
+- Next steps
+- Contact information
+
+Format each slide clearly with titles, bullet points, and compelling content.`;
+                    break;
+
+                case 'business':
+                    userPrompt = `Create a comprehensive Business Plan for: "${userIdea}"
+
+GAME TYPE: ${planType}
+DEVELOPMENT TOOL: ${tool}
+
+Structure as a professional business plan with:
+
+📋 EXECUTIVE SUMMARY
+- Game concept overview
+- Mission statement
+- Financial projections summary
+- Funding requirements
+
+🎮 COMPANY & PRODUCT DESCRIPTION
+- Company overview (your indie studio)
+- Product description & features
+- Development stage & timeline
+- Intellectual property status
+
+📊 INDUSTRY & MARKET ANALYSIS
+- Game industry overview
+- Target market analysis
+- Market size & growth projections
+- Competitive analysis (direct & indirect competitors)
+
+👥 MARKETING & SALES STRATEGY
+- Marketing plan & channels
+- Sales strategy & distribution
+- Pricing strategy
+- Customer acquisition plan
+
+💼 OPERATIONS PLAN
+- Development team structure
+- Technology requirements
+- Development timeline & milestones
+- Risk management plan
+
+💰 FINANCIAL PLAN
+- Startup costs breakdown
+- Operating expenses (monthly/annual)
+- Revenue projections (Year 1-3)
+- Break-even analysis
+- Funding requirements & use of funds
+
+🎯 FUNDING REQUEST (if applicable)
+- Amount requested
+- Use of funds
+- Repayment terms
+- Exit strategy
+
+Format this as a professional business plan with realistic financial projections and market analysis.`;
+                    break;
+
+                case 'timeline':
+                    userPrompt = `Create a detailed Project Timeline & Milestones for: "${userIdea}"
+
+GAME TYPE: ${planType}
+DEVELOPMENT TOOL: ${tool}
+
+Structure as a comprehensive project timeline with:
+
+📅 PROJECT OVERVIEW
+- Total project duration estimate
+- Major phases breakdown
+- Key milestones & deliverables
+
+🏗️ PHASE 1: PRE-PRODUCTION (Weeks 1-4)
+- Concept development & refinement
+- Market research & competitive analysis
+- Technical feasibility assessment
+- Team assembly & resource planning
+
+🎨 PHASE 2: PROTOTYPE DEVELOPMENT (Weeks 5-8)
+- Core mechanics prototyping
+- Technical architecture setup
+- Initial art & audio assets
+- Playtesting & iteration
+
+🏗️ PHASE 3: PRODUCTION (Weeks 9-20)
+- Full game development
+- Asset creation pipeline
+- Feature implementation
+- Regular playtesting sessions
+
+✨ PHASE 4: POLISH & OPTIMIZATION (Weeks 21-24)
+- Performance optimization
+- Bug fixing & stability improvements
+- UI/UX refinements
+- Final art & audio polish
+
+🚀 PHASE 5: LAUNCH PREPARATION (Weeks 25-26)
+- Marketing materials creation
+- Store page preparation
+- Beta testing coordination
+- Launch checklist completion
+
+📊 PHASE 6: LAUNCH & POST-LAUNCH (Ongoing)
+- App store submissions
+- Marketing campaign execution
+- User feedback collection
+- Update planning & bug fixes
+
+Format with specific weeks, deliverables, responsible parties, and success criteria for each milestone.`;
+                    break;
+
+                case 'budget':
+                    userPrompt = `Create a detailed Budget Breakdown for: "${userIdea}"
+
+GAME TYPE: ${planType}
+DEVELOPMENT TOOL: ${tool}
+
+Structure as a comprehensive budget analysis with:
+
+💰 DEVELOPMENT BUDGET OVERVIEW
+- Total estimated budget
+- Development timeline assumption
+- Team size & composition
+- Cost breakdown categories
+
+👥 PERSONNEL COSTS
+- Lead Developer salary/rate
+- Additional programmers
+- Artists & animators
+- Sound designer & composer
+- QA testers
+- Project manager (if applicable)
+
+🛠️ SOFTWARE & TOOLS
+- Development engine licenses
+- Art & design software
+- Audio production tools
+- Version control & collaboration tools
+- Testing & analytics platforms
+- Marketing tools
+
+🎨 ART & AUDIO ASSETS
+- Character design & animation
+- Environment art & assets
+- UI/UX design
+- Sound effects & music composition
+- Voice acting (if applicable)
+
+📱 PLATFORM & DISTRIBUTION FEES
+- App store fees (Apple, Google)
+- Console publishing fees (if applicable)
+- Payment processing fees
+- Server hosting costs
+
+📢 MARKETING & LAUNCH COSTS
+- Marketing campaign budget
+- App store optimization
+- Community management
+- Influencer partnerships
+- PR & media outreach
+
+⚡ CONTINGENCY & MISCELLANEOUS
+- Unexpected development costs
+- Legal fees & IP protection
+- Insurance & business expenses
+- Hardware upgrades
+- Professional services (consulting, etc.)
+
+📊 BUDGET TIMELINE BREAKDOWN
+- Month-by-month spending projections
+- Cash flow analysis
+- Funding milestone recommendations
+
+Format with realistic cost estimates, assumptions clearly stated, and contingency planning.`;
+                    break;
+
+                default: // standard professional plan
+                    userPrompt = `Create a comprehensive professional game development plan for: "${userIdea}"
+
+GAME TYPE: ${planType}
+DEVELOPMENT TOOL: ${tool}
+
+Please structure this as a complete Game Design Document with the following sections:
+
+🎯 EXECUTIVE SUMMARY
+- Game concept overview
+- Target audience and market positioning
+- Unique value proposition
+- High-level goals and success metrics
+
+🎮 GAME DESIGN
+- Core gameplay mechanics (detailed)
+- Player progression systems
+- Win/lose conditions
+- Level/world design concepts
+
+💻 TECHNICAL SPECIFICATIONS
+- Technology stack and requirements
+- Performance targets (FPS, load times, etc.)
+- Platform specifications
+- Third-party integrations needed
+
+👥 DEVELOPMENT PLAN
+- Detailed timeline (realistic 2-6 month schedule)
+- Milestone breakdown with deliverables
+- Team requirements and roles
+- Development phases (Pre-production, Production, Polish, Launch)
+
+💰 BUDGET & RESOURCES
+- Estimated development budget breakdown
+- Asset requirements (art, audio, etc.)
+- Tool subscriptions and costs
+- Outsourcing considerations
+
+📊 BUSINESS & MONETIZATION
+- Revenue model and pricing strategy
+- Marketing and launch plan
+- Competitive analysis
+- Risk assessment and mitigation
+
+🛠️ TECHNICAL IMPLEMENTATION
+- Architecture overview
+- Key systems design
+- Performance optimization plan
+- Testing and QA strategy
+
+Format this professionally with clear sections, bullet points, and actionable details.`;
+            }
+        } else {
+            userPrompt = `Create a detailed game development plan for: ${userIdea}. Game type: ${planType}. Development tool: ${tool}. Make it achievable for beginners, with step-by-step instructions, technical advice, and realistic timeline. Include folder structure and tool-specific tips.`;
+        }
+
         // Use OpenAI API to generate dynamic game plan
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -96,14 +438,14 @@ async function generatePlan(userIdea, planType, tool) {
                 messages: [
                     {
                         role: 'system',
-                        content: 'You are a game development expert. Create detailed, actionable game development plans for indie developers. Focus on tiny, achievable scopes that can be built in 1-2 weeks. Include technical advice, timeline, and folder structure.'
+                        content: systemPrompt
                     },
                     {
                         role: 'user',
-                        content: `Create a detailed game development plan for: ${userIdea}. Game type: ${planType}. Development tool: ${tool}. Make it achievable for beginners, with step-by-step instructions, technical advice, and realistic timeline. Include folder structure and tool-specific tips.`
+                        content: userPrompt
                     }
                 ],
-                max_tokens: 1500,
+                max_tokens: isPremium ? (selectedFormat === 'business' || selectedFormat === 'budget' ? 3000 : 2500) : 1500, // More tokens for complex formats
                 temperature: 0.7
             })
         });
@@ -470,6 +812,14 @@ function updateUIForUser() {
         banner.style.display = 'block';
     } else {
         banner.style.display = 'none';
+    }
+    
+    // Show/hide premium features
+    const formatSelection = document.getElementById('format-selection');
+    if (userSubscription === 'premium' || userSubscription === 'pro') {
+        formatSelection.style.display = 'block';
+    } else {
+        formatSelection.style.display = 'none';
     }
     
     // Add user account info
