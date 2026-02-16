@@ -149,14 +149,10 @@
             <!-- Subscription Tier Selection -->
             <div id="tier-selection" class="input-group">
                 <label for="subscription-tier">Choose Your Plan</label>
-                <select id="subscription-tier">
-                    <option value="free">Free - 3 plans/day, basic game ideas</option>
-                    <option value="premium">Premium £4.99/month - Unlimited professional plans, multiple formats, detailed GDDs</option>
-                    <option value="pro">Pro £9.99/month - Everything in Premium + business intelligence & revenue projections</option>
-                    <option value="studio">Studio £19.99/month - Everything in Pro + portfolio management & advanced export</option>
-                    <option value="enterprise">Enterprise £49.99/month - Everything + custom integrations & priority support</option>
-                </select>
-                <button id="upgrade-btn">Upgrade Now</button>
+                <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
+                <stripe-pricing-table pricing-table-id="prctbl_1T1VfaGLJIUQBz70t10wXWYF"
+                publishable-key="pk_live_51T1TbGGLJIUQBz70Xph1IwMQwzPQnl7Z2RNT5DOcuyoM5QbDbZ3OncV60gh8Wx3h9ng1uX1CKojO9GSOLScHncKW00ZmrN86So">
+                </stripe-pricing-table>
             </div>
             <div id="next-steps">
                 <h3>🎯 What to do next?</h3>
