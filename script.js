@@ -603,7 +603,41 @@ function generateIdeas() {
 
 document.getElementById('ideas').addEventListener('click', generateIdeas);
 
-document.getElementById('share-page').addEventListener('click', function() {
+document.getElementById('business-intelligence').addEventListener('click', function() {
+    // Check if user is logged in
+    if (!currentUser) {
+        showAuthModal();
+        return;
+    }
+    
+    // Check if user is premium
+    if (userSubscription === 'free') {
+        alert('Business Intelligence Analysis is a Premium feature. Upgrade to access market analysis, revenue projections, and competitive insights!');
+        document.getElementById('upgrade-btn').click();
+        return;
+    }
+    
+    const generateBtn = document.getElementById('generate');
+    generateBtn.disabled = true;
+    document.getElementById('loading').style.display = 'block';
+    
+    setTimeout(async () => {
+        const idea = document.getElementById('idea').value.trim().toLowerCase();
+        const tool = document.getElementById('tool').value;
+        
+        if (!idea) {
+            alert('Please enter a game idea first!');
+            document.getElementById('loading').style.display = 'none';
+            generateBtn.disabled = false;
+            return;
+        }
+        
+        const biAnalysis = await generateBusinessIntelligence(idea, tool);
+        document.getElementById('output').innerHTML = biAnalysis;
+        document.getElementById('loading').style.display = 'none';
+        generateBtn.disabled = false;
+    }, 600);
+});
     const url = 'https://twitter.com/intent/tweet?text=Check%20out%20True%20Scope%20-%20a%20tool%20that%20turns%20game%20ideas%20into%20tiny%20buildable%20plans!%20https://true-scope-mvp.vercel.app/';
     try {
         window.open(url, '_blank');
@@ -691,11 +725,101 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     voiceStatus.textContent = '📝 Voice input not supported in this browser';
 }
 
-// ===== STRIPE PAYMENT INTEGRATION =====
+// ===== BUSINESS INTELLIGENCE ANALYSIS =====
 
-// Initialize Stripe with your publishable key
-// Replace with your actual Stripe publishable key
-const stripeInstance = Stripe('pk_test_51T1TbGGLJIUQBz70LN2ny62qU8bD8cd1HhZDcr3Y3tQ2LW1cjGUDwPM6MORpjzPyU2kMUTPaXIlUwkT9SKmJAQ5d00CzKqLXXA');
+async function generateBusinessIntelligence(userIdea, tool) {
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer YOUR_OPENAI_API_KEY` // Replace with actual key
+            },
+            body: JSON.stringify({
+                model: 'gpt-3.5-turbo',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a senior gaming industry analyst and business consultant specializing in indie game market analysis, revenue projections, and competitive intelligence. Provide comprehensive, data-driven business intelligence reports for indie game developers.'
+                    },
+                    {
+                        role: 'user',
+                        content: `Create a comprehensive Business Intelligence Analysis for this game concept:
+
+GAME IDEA: "${userIdea}"
+DEVELOPMENT TOOL: ${tool}
+
+Please structure this analysis as a professional business intelligence report with these sections:
+
+📊 MARKET ANALYSIS
+- Market size and growth projections (2024-2028)
+- Key market trends and drivers
+- Regional market opportunities
+- Market segmentation analysis
+
+👥 TARGET AUDIENCE ANALYSIS
+- Primary target demographics (age, gender, location)
+- Secondary audience segments
+- Player psychographics and motivations
+- User acquisition channels
+
+🏆 COMPETITIVE LANDSCAPE
+- Direct competitors analysis (3-5 key games)
+- Indirect competitors and market alternatives
+- Competitive advantages and differentiation
+- Market positioning strategy
+
+💰 REVENUE PROJECTIONS
+- Year 1 revenue projections (conservative/realistic/optimistic)
+- Year 2-3 growth projections
+- Revenue breakdown by source (app stores, ads, IAP, etc.)
+- Unit economics analysis
+
+📈 MONETIZATION STRATEGY
+- Recommended pricing strategy
+- In-app purchase opportunities
+- Advertising integration potential
+- Subscription/donation models
+
+🎯 GO-TO-MARKET STRATEGY
+- Launch timeline recommendations
+- Marketing channel prioritization
+- Community building strategy
+- Partnership opportunities
+
+⚠️ RISK ASSESSMENT
+- Technical development risks
+- Market adoption risks
+- Financial risks and mitigation
+- Competitive response risks
+
+📋 SUCCESS METRICS & KPIs
+- Key performance indicators to track
+- User acquisition cost targets
+- Retention and engagement goals
+- Financial milestones
+
+Format this as a comprehensive business intelligence report with data-driven insights, realistic projections, and actionable recommendations. Include specific numbers, percentages, and market data where appropriate.`
+                    }
+                ],
+                max_tokens: 3000,
+                temperature: 0.7
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('AI service unavailable');
+        }
+        
+        const data = await response.json();
+        const biReport = data.choices[0].message.content;
+        
+        // Format AI response as HTML
+        return `<h2>📊 Business Intelligence Analysis</h2><br><br><div class="business-intelligence-report">${biReport}</div>`;
+    } catch (error) {
+        return `<h2>🤖 Business Intelligence Service Unavailable</h2><br><br><p>Sorry, the business intelligence analysis service is currently unavailable. Please try again later.</p>`;
+    }
+}
 
 document.getElementById('upgrade-btn').addEventListener('click', upgradeToPro);
 
@@ -816,10 +940,14 @@ function updateUIForUser() {
     
     // Show/hide premium features
     const formatSelection = document.getElementById('format-selection');
+    const businessIntelligenceBtn = document.getElementById('business-intelligence');
+    
     if (userSubscription === 'premium' || userSubscription === 'pro') {
         formatSelection.style.display = 'block';
+        businessIntelligenceBtn.style.display = 'block';
     } else {
         formatSelection.style.display = 'none';
+        businessIntelligenceBtn.style.display = 'none';
     }
     
     // Add user account info

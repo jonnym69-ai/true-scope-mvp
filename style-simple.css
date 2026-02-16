@@ -4,7 +4,8 @@
 #signup-form,
 #premium-banner,
 #auth-error,
-#format-selection {
+#format-selection,
+#business-intelligence {
     display: none;
 }
 body {
