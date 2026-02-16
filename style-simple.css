@@ -3,7 +3,8 @@
 #auth-modal,
 #signup-form,
 #premium-banner,
-#auth-error {
+#auth-error,
+#format-selection {
     display: none;
 }
 body {
