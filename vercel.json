@@ -1,11 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "true-scope-mvp/**/*",
-      "use": "@vercel/static"
-    }
-  ],
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs18"
