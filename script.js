@@ -973,13 +973,20 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     `;
     testDiv.innerHTML = `
         <div style="margin-bottom: 5px;"><strong>🧪 Dev Testing</strong></div>
-        <button onclick="userSubscription='free'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Free</button>
-        <button onclick="userSubscription='premium'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Premium</button>
-        <button onclick="userSubscription='pro'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Pro</button>
-        <button onclick="userSubscription='studio'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Studio</button>
-        <button onclick="userSubscription='enterprise'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Enterprise</button>
+        <button onclick="window.testSubscription('free');" style="margin: 2px; padding: 5px; font-size: 11px;">Free</button>
+        <button onclick="window.testSubscription('premium');" style="margin: 2px; padding: 5px; font-size: 11px;">Premium</button>
+        <button onclick="window.testSubscription('pro');" style="margin: 2px; padding: 5px; font-size: 11px;">Pro</button>
+        <button onclick="window.testSubscription('studio');" style="margin: 2px; padding: 5px; font-size: 11px;">Studio</button>
+        <button onclick="window.testSubscription('enterprise');" style="margin: 2px; padding: 5px; font-size: 11px;">Enterprise</button>
     `;
     document.body.appendChild(testDiv);
+    
+    // Make function globally available
+    window.testSubscription = function(tier) {
+        console.log('Testing subscription tier:', tier);
+        userSubscription = tier;
+        updateUIForUser();
+    };
 }
 
 function upgradeToPro() {
