@@ -911,60 +911,12 @@ async function deletePortfolioPlan(planId) {
     }
 }
 
-// Handle subscription tier dropdown changes
-document.getElementById('subscription-tier').addEventListener('change', function(e) {
-    const selectedTier = e.target.value;
-    updateUserSubscription(selectedTier);
-    
-    if (selectedTier !== 'free') {
-        document.getElementById('confirmation').innerText = `✅ Switched to ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} plan!`;
-        setTimeout(() => document.getElementById('confirmation').innerText = '', 3000);
-    }
-});
-
 // Update upgrade button to handle real Stripe checkout
 document.getElementById('upgrade-btn').addEventListener('click', async function() {
-    const selectedTier = document.getElementById('subscription-tier').value;
-    
-    if (selectedTier === 'free') {
-        alert('Please select a premium plan to upgrade!');
-        return;
-    }
-    
-    try {
-        // Show loading
-        this.disabled = true;
-        this.innerText = 'Processing...';
-        
-        // Call Stripe checkout session API
-        const response = await fetch('/api/create-checkout-session', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                tier: selectedTier,
-                userId: currentUser ? currentUser.uid : null
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to create checkout session');
-        }
-        
-        const { url } = await response.json();
-        
-        // Redirect to Stripe Checkout
-        window.location.href = url;
-        
-    } catch (error) {
-        console.error('Error creating checkout session:', error);
-        alert('Failed to start checkout. Please try again.');
-        
-        // Reset button
-        this.disabled = false;
-        this.innerText = 'Upgrade Now';
-    }
+    // Stripe pricing table handles the checkout, just show confirmation
+    const conf = document.getElementById('confirmation');
+    conf.innerText = '🚀 Redirecting to Stripe checkout...';
+    setTimeout(() => conf.innerText = '', 3000);
 });
 
 // ===== FREEMIUM AUTHENTICATION & USER MANAGEMENT =====
