@@ -484,12 +484,11 @@ Format this professionally with clear sections, bullet points, and actionable de
             userPrompt = `Create a detailed game development plan for: ${userIdea}. Game type: ${planType}. Development tool: ${tool}. Make it achievable for beginners, with step-by-step instructions, technical advice, and realistic timeline. Include folder structure and tool-specific tips.`;
         }
 
-        // Use OpenAI API to generate dynamic game plan
-        // Note: Add OPENAI_API_KEY to your Vercel environment variables
-        const apiKey = process.env.OPENAI_API_KEY || 'YOUR_OPENAI_API_KEY';
+        // Use OpenAI API - production only
+        const apiKey = process.env.OPENAI_API_KEY;
         
-        if (!apiKey || apiKey === 'YOUR_OPENAI_API_KEY') {
-            return `<h2>🤖 AI Service Unavailable</h2><br><br><p>AI service requires API key. Please contact administrator.</p>`;
+        if (!apiKey) {
+            return `<h2>🔑 API Key Required</h2><br><br><p>Please add your OpenAI API key to continue.</p><p><strong>Developers:</strong> Add OPENAI_API_KEY to your environment variables.</p><p><strong>Users:</strong> This feature requires a premium subscription.</p>`;
         }
         
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
