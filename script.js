@@ -836,17 +836,48 @@ function updateUIForUser() {
             formatSelection.style.display = 'block';
             formatSelection.disabled = true;
             formatSelection.title = 'Upgrade to Premium to use this feature';
-            formatSelection.onchange = () => {
-                alert('📋 Upgrade to Premium to unlock Plan Format Selection!\n\nGet access to:\n• Technical Specification\n• Pitch Deck Format\n• Business Plan\n• Timeline & Milestones\n• Budget Breakdown\n\nOnly £4.99/month');
-                upgradeToPro();
-            };
+            // Track premium feature interactions
+        analytics.track('premium_feature_interaction', {
+            user_id: currentUser?.uid,
+            email: currentUser?.email,
+            feature: 'format_selection',
+            tier: userSubscription,
+            action: 'upgrade_prompt_shown'
+        });
+        
+        formatSelection.onchange = () => {
+            alert('📋 Upgrade to Premium to unlock Plan Format Selection!\n\nGet access to:\n• Technical Specification\n• Pitch Deck Format\n• Business Plan\n• Timeline & Milestones\n• Budget Breakdown\n\nOnly £4.99/month');
+            
+            // Track upgrade interest
+            analytics.track('upgrade_interest', {
+                user_id: currentUser?.uid,
+                email: currentUser?.email,
+                feature: 'format_selection',
+                tier: 'premium',
+                price: '4.99',
+                currency: 'GBP'
+            });
+            
+            upgradeToPro();
+        };
         }
         if (businessIntelligenceBtn) {
             businessIntelligenceBtn.style.display = 'block';
             businessIntelligenceBtn.disabled = true;
             businessIntelligenceBtn.title = 'Upgrade to Pro to use Business Intelligence';
             businessIntelligenceBtn.onclick = () => {
-                alert('� Upgrade to Pro to unlock Business Intelligence Analysis!\n\nGet access to:\n• Market Research & Analysis\n• Revenue Projections\n• Competitive Landscape\n• Launch Strategy\n• Performance Optimization\n\nOnly £8.99/month');
+                alert('📊 Upgrade to Pro to unlock Business Intelligence Analysis!\n\nGet access to:\n• Market Research & Analysis\n• Revenue Projections\n• Competitive Landscape\n• Launch Strategy\n• Performance Optimization\n\nOnly £8.99/month');
+                
+                // Track upgrade interest
+                analytics.track('upgrade_interest', {
+                    user_id: currentUser?.uid,
+                    email: currentUser?.email,
+                    feature: 'business_intelligence',
+                    tier: 'pro',
+                    price: '8.99',
+                    currency: 'GBP'
+                });
+                
                 upgradeToPro();
             };
         }
@@ -856,6 +887,17 @@ function updateUIForUser() {
             savePlanBtn.title = 'Upgrade to Studio to save plans';
             savePlanBtn.onclick = () => {
                 alert('📁 Upgrade to Studio to save unlimited plans to your portfolio!\n\nGet access to:\n• Unlimited Plan Saving\n• Portfolio Management\n• Project Organization\n• Progress Tracking\n• Advanced Export Options\n\nOnly £17.99/month');
+                
+                // Track upgrade interest
+                analytics.track('upgrade_interest', {
+                    user_id: currentUser?.uid,
+                    email: currentUser?.email,
+                    feature: 'portfolio_management',
+                    tier: 'studio',
+                    price: '17.99',
+                    currency: 'GBP'
+                });
+                
                 upgradeToPro();
             };
         }
@@ -1025,6 +1067,14 @@ function upgradeToPro() {
         alert('Please sign in first to upgrade!');
         return;
     }
+    
+    // Track upgrade intent in analytics
+    analytics.track('upgrade_intent', {
+        user_id: currentUser.uid,
+        email: currentUser.email,
+        current_tier: userSubscription,
+        source: 'premium_banner'
+    });
     
     // Scroll to upgrade button
     const upgradeBtn = document.getElementById('upgrade-btn');

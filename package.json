@@ -7,9 +7,10 @@
     "deploy": "vercel --prod"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
     "dotenv": "^17.3.1",
     "firebase": "^12.9.0",
-    "firebase-admin": "^11.10.1",
+    "firebase-admin": "^13.6.1",
     "stripe": "^14.9.0"
   }
 }
