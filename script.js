@@ -815,7 +815,7 @@ function updateUIForUser() {
         if (formatSelection) formatSelection.style.display = 'none';
         if (businessIntelligenceBtn) businessIntelligenceBtn.style.display = 'none';
         if (savePlanBtn) savePlanBtn.style.display = 'none';
-        if (viewPortfolioBtn) viewPortfolioBtn) viewPortfolioBtn.style.display = 'none';
+        if (viewPortfolioBtn) viewPortfolioBtn.style.display = 'none';
     }
     
     // Add user account info
