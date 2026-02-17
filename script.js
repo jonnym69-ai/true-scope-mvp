@@ -1,16 +1,8 @@
-// Vercel Analytics
-import { Analytics } from "@vercel/analytics/next";
-
 // Global user state
 let currentUser = null;
 let userSubscription = null;
 let userUsageToday = 0;
 const DAILY_LIMIT_FREE = 3;
-
-// Initialize analytics
-const analytics = new Analytics({
-    mode: 'production'
-});
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -189,7 +181,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Business intelligence button
     const businessIntelligenceBtn = document.getElementById('business-intelligence');
-    // Event listener is now set in updateUIForUser() based on subscription status
+    if (businessIntelligenceBtn) {
+        businessIntelligenceBtn.addEventListener('click', function() {
+            // Check if user is logged in
+            if (!currentUser) {
+                showAuthModal();
+                return;
+            }
+            
+            // Check if user is premium
+            if (userSubscription === 'free') {
+                alert('Business Intelligence Analysis is a Premium feature. Upgrade to access market analysis, revenue projections, and competitive insights!');
+                document.getElementById('upgrade-btn').click();
+                return;
+            }
+            
+            const generateBtn = document.getElementById('generate');
+            generateBtn.disabled = true;
+            document.getElementById('loading').style.display = 'block';
+            
+            setTimeout(async () => {
+                const idea = document.getElementById('idea').value.trim().toLowerCase();
+                const tool = document.getElementById('tool').value;
+                
+                if (!idea) {
+                    alert('Please enter a game idea first!');
+                    document.getElementById('loading').style.display = 'none';
+                    generateBtn.disabled = false;
+                    return;
+                }
+                
+                const biAnalysis = await generateBusinessIntelligence(idea, tool);
+                document.getElementById('output').innerHTML = biAnalysis;
+                document.getElementById('loading').style.display = 'none';
+                generateBtn.disabled = false;
+            }, 600);
+        });
+    }
 
     // Upgrade button
     const upgradeBtn = document.getElementById('upgrade-btn');
@@ -1002,22 +1030,15 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     `;
     document.body.appendChild(testDiv);
     
-    // Make updateUIForUser globally available for HTML onclick handlers
-    window.updateUIForUser = updateUIForUser;
-    
     // Make function globally available
     window.testSubscription = function(tier) {
         console.log('Testing subscription tier:', tier);
         userSubscription = tier;
         updateUIForUser();
-        
-        // Track subscription change in analytics
-        analytics.track('subscription_change', {
-            tier: tier,
-            previous_tier: userSubscription,
-            source: 'dev_testing'
-        });
     };
+    
+    // Make updateUIForUser globally available for HTML onclick handlers
+    window.updateUIForUser = updateUIForUser;
 }
 
 function upgradeToPro() {
