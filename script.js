@@ -293,7 +293,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize authentication
     initializeAuth();
-});
 
 // Generate ideas function
 function generateIdeas() {
@@ -986,3 +985,9 @@ function upgradeToPro() {
         showLoginBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            if (loginForm) loginForm.style.display = 'block';
+            if (signupForm) signupForm.style.display = 'none';
+        });
+    }
+});
