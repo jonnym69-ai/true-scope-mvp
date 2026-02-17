@@ -920,8 +920,7 @@ function upgradeToPro() {
     }
 }
 
-// Auth event handlers
-document.addEventListener('DOMContentLoaded', () => {
+// Auth event handlers (moved inside main DOMContentLoaded)
     // Login form
     const loginBtn = document.getElementById('login-btn');
     if (loginBtn) {
@@ -987,9 +986,3 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoginBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const loginForm = document.getElementById('login-form');
-            const signupForm = document.getElementById('signup-form');
-            if (loginForm) loginForm.style.display = 'block';
-            if (signupForm) signupForm.style.display = 'none';
-        });
-    }
-});
