@@ -709,31 +709,6 @@ document.getElementById('business-intelligence').addEventListener('click', funct
     }, 600);
 });
 
-// Wait for DOM to be ready before adding event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    const shareOutputBtn = document.getElementById('share-output');
-    if (shareOutputBtn) {
-        shareOutputBtn.addEventListener('click', function() {
-    const output = document.getElementById('output');
-    const conf = document.getElementById('confirmation');
-    if (output.innerText.trim() === '' || output.innerText === 'Your plan will appear here. Try typing an idea or click \'Give me an idea\' to start.') {
-        conf.innerText = 'Nothing to share yet!';
-        setTimeout(() => conf.innerText = '', 2000);
-        return;
-    }
-    const text = encodeURIComponent(output.innerText);
-    const shareUrl = `https://twitter.com/intent/tweet?text=Here%20is%20my%20game%20plan%20from%20True%20Scope:%0A%0A${text}`;
-    try {
-        window.open(shareUrl, '_blank');
-    } catch {
-        navigator.clipboard.writeText(`Here is my game plan from True Scope:\n\n${output.innerText}`).then(() => {
-            conf.innerText = 'Share text copied to clipboard!';
-            setTimeout(() => conf.innerText = '', 2000);
-        });
-    }
-    }
-});
-
 document.getElementById('output').innerHTML = '<p>🎮 Your game plan will appear here! Type an idea above or click "💡 Give Me Game Ideas" to get started!</p>';
 
 // Voice input functionality
