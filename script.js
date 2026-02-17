@@ -4,91 +4,382 @@ let userSubscription = null;
 let userUsageToday = 0;
 const DAILY_LIMIT_FREE = 3;
 
-document.getElementById('generate').addEventListener('click', function() {
-    // Check if user is logged in
-    if (!currentUser) {
-        showAuthModal();
-        return;
-    }
-    
-    // Check usage limits for free users
-    if (userSubscription === 'free' && userUsageToday >= DAILY_LIMIT_FREE) {
-        const conf = document.getElementById('confirmation');
-        conf.innerHTML = '⚠️ Daily limit reached! <a href="#" onclick="document.getElementById(\'upgrade-btn\').click()">Upgrade to Pro</a> for unlimited plans.';
-        setTimeout(() => conf.innerText = '', 8000);
-        return;
-    }
-    
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate button
     const generateBtn = document.getElementById('generate');
-    generateBtn.disabled = true;
-    generateBtn.textContent = 'Thinking...';
-    document.getElementById('loading').style.display = 'block';
-    
-    setTimeout(async () => {
-        const idea = document.getElementById('idea').value.trim().toLowerCase();
-        const tool = document.getElementById('tool').value;
-        let planType = 'generic';
+    if (generateBtn) {
+        generateBtn.addEventListener('click', async function() {
+            // Check if user is logged in
+            if (!currentUser) {
+                showAuthModal();
+                return;
+            }
+            
+            // Check usage limits for free users
+            if (userSubscription === 'free' && userUsageToday >= DAILY_LIMIT_FREE) {
+                const conf = document.getElementById('confirmation');
+                conf.innerHTML = '⚠️ Daily limit reached! <a href="#" onclick="document.getElementById(\'upgrade-btn\').click()">Upgrade to Pro</a> for unlimited plans.';
+                setTimeout(() => conf.innerText = '', 8000);
+                return;
+            }
+            
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Thinking...';
+            document.getElementById('loading').style.display = 'block';
+            
+            setTimeout(async () => {
+                const idea = document.getElementById('idea').value.trim().toLowerCase();
+                const tool = document.getElementById('tool').value;
+                let planType = 'generic';
 
-        if (idea.includes('platformer')) {
-            planType = 'platformer';
-        } else if (idea.includes('rpg')) {
-            planType = 'rpg';
-        } else if (idea.includes('shooter') || idea.includes('fps')) {
-            planType = 'shooter';
-        } else if (idea.includes('farm') || idea.includes('farming') || idea.includes('harvest') || idea.includes('crops') || idea.includes('stardew') || idea.includes('ranch') || idea.includes('animals')) {
-            planType = 'farming';
-        } else if (idea.includes('puzzle') || idea.includes('logic') || idea.includes('match') || idea.includes('brain') || idea.includes('tile') || idea.includes('grid') || idea.includes('sokoban') || idea.includes('tetris')) {
-            planType = 'puzzle';
-        }
+                if (idea.includes('platformer')) {
+                    planType = 'platformer';
+                } else if (idea.includes('rpg')) {
+                    planType = 'rpg';
+                } else if (idea.includes('shooter') || idea.includes('fps')) {
+                    planType = 'shooter';
+                } else if (idea.includes('farm') || idea.includes('farming') || idea.includes('harvest') || idea.includes('crops') || idea.includes('stardew') || idea.includes('ranch') || idea.includes('animals')) {
+                    planType = 'farming';
+                } else if (idea.includes('puzzle') || idea.includes('logic') || idea.includes('match') || idea.includes('brain') || idea.includes('tile') || idea.includes('grid') || idea.includes('sokoban') || idea.includes('tetris')) {
+                    planType = 'puzzle';
+                }
 
-        const plan = await generatePlan(idea, planType, tool);
-        document.getElementById('output').innerHTML = plan;
-        document.getElementById('loading').style.display = 'none';
-        generateBtn.disabled = false;
-        generateBtn.textContent = '🎮 Generate My Game Plan';
-        
-        // Update usage
-        userUsageToday++;
-        await updateUserData({ 
-            usageToday: userUsageToday,
-            totalUsage: (await getUserData('totalUsage') || 0) + 1,
-            lastUsageDate: new Date().toDateString()
+                const plan = await generatePlan(idea, planType, tool);
+                document.getElementById('output').innerHTML = plan;
+                document.getElementById('loading').style.display = 'none';
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🎮 Generate My Game Plan';
+                
+                // Update usage
+                userUsageToday++;
+                await updateUserData({ 
+                    usageToday: userUsageToday,
+                    totalUsage: (await getUserData('totalUsage') || 0) + 1,
+                    lastUsageDate: new Date().toDateString()
+                });
+                
+                // Update UI
+                updateUIForUser();
+            }, 600);
         });
-        
-        // Update UI
-        updateUIForUser();
-    }, 600);
+    }
+
+    // Copy button
+    const copyBtn = document.getElementById('copy');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            const output = document.getElementById('output');
+            const text = output.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const conf = document.getElementById('confirmation');
+                conf.innerHTML = '✅ Plan copied! <strong>Next steps:</strong> Save it somewhere, share it, or start building your game! 🎮';
+                setTimeout(() => conf.innerText = '', 5000);
+            });
+        });
+    }
+
+    // Reset button
+    const resetBtn = document.getElementById('reset');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            const output = document.getElementById('output');
+            output.classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById('idea').value = '';
+                document.getElementById('tool').value = 'Unity';
+                output.innerHTML = '';
+                document.getElementById('confirmation').innerText = '';
+                output.classList.remove('fade-out');
+            }, 500);
+        });
+    }
+
+    // Ideas button
+    const ideasBtn = document.getElementById('ideas');
+    if (ideasBtn) {
+        ideasBtn.addEventListener('click', generateIdeas);
+    }
+
+    // View portfolio button
+    const viewPortfolioBtn = document.getElementById('view-portfolio');
+    if (viewPortfolioBtn) {
+        viewPortfolioBtn.addEventListener('click', function() {
+            if (!currentUser) {
+                showAuthModal();
+                return;
+            }
+            
+            if (userSubscription === 'free') {
+                alert('Viewing your portfolio is a Premium feature. Upgrade to access your saved game plans!');
+                document.getElementById('upgrade-btn').click();
+                return;
+            }
+            
+            showPortfolioModal();
+        });
+    }
+
+    // Save plan button
+    const savePlanBtn = document.getElementById('save-plan');
+    if (savePlanBtn) {
+        savePlanBtn.addEventListener('click', async function() {
+            const output = document.getElementById('output');
+            const confirmation = document.getElementById('confirmation');
+            
+            if (!currentUser) {
+                confirmation.innerText = 'Please sign in to save plans!';
+                setTimeout(() => confirmation.innerText = '', 3000);
+                return;
+            }
+            
+            if (userSubscription === 'free') {
+                confirmation.innerHTML = 'Saving plans to portfolio is a Premium feature! <a href="#" onclick="document.getElementById(\'upgrade-btn\').click()">Upgrade now</a> to save and organize your game plans.';
+                setTimeout(() => confirmation.innerText = '', 5000);
+                return;
+            }
+            
+            if (output.innerText.trim() === '' || output.innerText === 'Your plan will appear here. Try typing an idea or click \'Give me an idea\' to start.') {
+                confirmation.innerText = 'No plan to save! Generate a plan first.';
+                setTimeout(() => confirmation.innerText = '', 3000);
+                return;
+            }
+            
+            try {
+                // Get plan title from user
+                const planTitle = prompt('Enter a name for this plan:', 'My Game Plan');
+                if (!planTitle || planTitle.trim() === '') {
+                    confirmation.innerText = 'Plan not saved - no title provided.';
+                    setTimeout(() => confirmation.innerText = '', 3000);
+                    return;
+                }
+                
+                // Save plan to Firestore
+                const planData = {
+                    title: planTitle.trim(),
+                    content: output.innerHTML,
+                    textContent: output.innerText,
+                    idea: document.getElementById('idea').value,
+                    tool: document.getElementById('tool').value,
+                    format: document.getElementById('plan-format') ? document.getElementById('plan-format').value : 'standard',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+                
+                await savePlanToPortfolio(planData);
+                
+                confirmation.innerText = `✅ Plan "${planTitle}" saved to your portfolio!`;
+                setTimeout(() => confirmation.innerText = '', 3000);
+                
+            } catch (error) {
+                console.error('Error saving plan:', error);
+                confirmation.innerText = '❌ Failed to save plan. Please try again.';
+                setTimeout(() => confirmation.innerText = '', 3000);
+            }
+        });
+    }
+
+    // Business intelligence button
+    const businessIntelligenceBtn = document.getElementById('business-intelligence');
+    if (businessIntelligenceBtn) {
+        businessIntelligenceBtn.addEventListener('click', function() {
+            // Check if user is logged in
+            if (!currentUser) {
+                showAuthModal();
+                return;
+            }
+            
+            // Check if user is premium
+            if (userSubscription === 'free') {
+                alert('Business Intelligence Analysis is a Premium feature. Upgrade to access market analysis, revenue projections, and competitive insights!');
+                document.getElementById('upgrade-btn').click();
+                return;
+            }
+            
+            const generateBtn = document.getElementById('generate');
+            generateBtn.disabled = true;
+            document.getElementById('loading').style.display = 'block';
+            
+            setTimeout(async () => {
+                const idea = document.getElementById('idea').value.trim().toLowerCase();
+                const tool = document.getElementById('tool').value;
+                
+                if (!idea) {
+                    alert('Please enter a game idea first!');
+                    document.getElementById('loading').style.display = 'none';
+                    generateBtn.disabled = false;
+                    return;
+                }
+                
+                const biAnalysis = await generateBusinessIntelligence(idea, tool);
+                document.getElementById('output').innerHTML = biAnalysis;
+                document.getElementById('loading').style.display = 'none';
+                generateBtn.disabled = false;
+            }, 600);
+        });
+    }
+
+    // Upgrade button
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    if (upgradeBtn) {
+        upgradeBtn.addEventListener('click', async function() {
+            // Stripe pricing table handles the checkout, just show confirmation
+            const conf = document.getElementById('confirmation');
+            conf.innerText = '🚀 Use the Stripe pricing table below to upgrade!';
+            setTimeout(() => conf.innerText = '', 3000);
+        });
+    }
+
+    // Voice input functionality
+    const voiceBtn = document.getElementById('voice-btn');
+    const voiceStatus = document.getElementById('voice-status');
+    const ideaTextarea = document.getElementById('idea');
+
+    if (voiceBtn && voiceStatus && ideaTextarea) {
+        // Check if browser supports speech recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                voiceBtn.classList.add('recording');
+                voiceStatus.textContent = '🎤 Listening... Speak now!';
+                voiceBtn.innerHTML = '⏹️';
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                ideaTextarea.value = transcript;
+                voiceStatus.textContent = '✅ Voice input added!';
+                setTimeout(() => {
+                    voiceStatus.textContent = '';
+                }, 2000);
+            };
+            
+            recognition.onerror = function(event) {
+                voiceStatus.textContent = '❌ Voice error: ' + event.error;
+                setTimeout(() => {
+                    voiceStatus.textContent = '';
+                }, 3000);
+            };
+            
+            recognition.onend = function() {
+                voiceBtn.classList.remove('recording');
+                voiceBtn.innerHTML = '🎤';
+            };
+            
+            voiceBtn.addEventListener('click', function() {
+                if (voiceBtn.classList.contains('recording')) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+        } else {
+            voiceBtn.style.display = 'none';
+            voiceStatus.textContent = '📝 Voice input not supported in this browser';
+        }
+    }
+
+    // Initialize output
+    const output = document.getElementById('output');
+    if (output) {
+        output.innerHTML = '<p>🎮 Your game plan will appear here! Type an idea above or click "💡 Give Me Game Ideas" to get started!</p>';
+    }
+
+    // Initialize authentication
+    initializeAuth();
 });
 
-document.getElementById('copy').addEventListener('click', function() {
-    const output = document.getElementById('output');
-    const text = output.innerText;
-    navigator.clipboard.writeText(text).then(() => {
-        const conf = document.getElementById('confirmation');
-        conf.innerHTML = '✅ Plan copied! <strong>Next steps:</strong> Save it somewhere, share it, or start building your game! 🎮';
-        setTimeout(() => conf.innerText = '', 5000);
+// Generate ideas function
+function generateIdeas() {
+    const ideas = [
+        {
+            name: "Moon Miner Micro",
+            vibe: "Lonely, atmospheric, tiny sci‑fi",
+            core: "Mine → refine → upgrade",
+            scope: "1 level, 3 upgrades",
+            why: "Teaches resource loops without overwhelm"
+        },
+        {
+            name: "Night Shift Runner",
+            vibe: "Flashlight, footsteps, tension",
+            core: "Avoid monster → find keys → escape",
+            scope: "1 map, 1 enemy",
+            why: "Teaches tension + level design"
+        },
+        {
+            name: "Tiny Farm Plot",
+            vibe: "Cozy, simple, Stardew‑lite",
+            core: "Plant → grow → harvest",
+            scope: "3 crops, 3x3 grid",
+            why: "Teaches grids + timers"
+        },
+        {
+            name: "Block Push Basement",
+            vibe: "Quiet, brainy, minimal",
+            core: "Push blocks → reach goal",
+            scope: "3 handcrafted levels",
+            why: "Teaches grid logic"
+        },
+        {
+            name: "Neon Dash",
+            vibe: "Fast, glowing, synthwave",
+            core: "Run → jump → dash",
+            scope: "1 level, 1 enemy",
+            why: "Teaches movement + collision"
+        },
+        {
+            name: "Micro Dungeon",
+            vibe: "Tiny fantasy",
+            core: "Fight → loot → upgrade",
+            scope: "1 dungeon, 3 items",
+            why: "Teaches stats + progression"
+        },
+        {
+            name: "One Room Survival",
+            vibe: "Claustrophobic, escalating",
+            core: "Gather → craft → survive",
+            scope: "1 room, 3 resources",
+            why: "Teaches loops + timers"
+        },
+        {
+            name: "Ghost in the Gallery",
+            vibe: "Eerie museum",
+            core: "Solve puzzles → avoid ghost",
+            scope: "1 map, 2 puzzles",
+            why: "Teaches pacing + atmosphere"
+        },
+        {
+            name: "Shape Swap",
+            vibe: "Bright, friendly",
+            core: "Swap shapes → match 3",
+            scope: "1 board, 3 tile types",
+            why: "Teaches match logic"
+        }
+    ];
+    const shuffled = ideas.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 3);
+    let html = '<h2>Here are 3 game ideas to spark your creativity!</h2><br><br>';
+    selected.forEach(idea => {
+        html += `<h3>${idea.name}</h3><p><strong>Vibe:</strong> ${idea.vibe}</p><ul><li><strong>Core Loop:</strong> ${idea.core}</li><li><strong>Scope:</strong> ${idea.scope}</li></ul><p><strong>Why it works:</strong> ${idea.why}</p><br><br>`;
     });
-});
+    document.getElementById('output').innerHTML = html;
+    document.getElementById('confirmation').innerText = '';
+}
 
-document.getElementById('reset').addEventListener('click', function() {
-    const output = document.getElementById('output');
-    output.classList.add('fade-out');
-    setTimeout(() => {
-        document.getElementById('idea').value = '';
-        document.getElementById('tool').value = 'Unity';
-        output.innerHTML = '';
-        document.getElementById('confirmation').innerText = '';
-        output.classList.remove('fade-out');
-    }, 500);
-});
-
+// Generate plan function
 async function generatePlan(userIdea, planType, tool) {
     try {
         // Check user subscription for premium features
         const isPremium = userSubscription === 'premium' || userSubscription === 'pro';
 
         // Get selected format (default to standard for free users)
-        const selectedFormat = isPremium ? document.getElementById('plan-format').value : 'standard';
+        const selectedFormat = isPremium && document.getElementById('plan-format') ? document.getElementById('plan-format').value : 'standard';
 
         // Enhanced professional prompt for premium users
         const systemPrompt = isPremium ?
@@ -136,238 +427,6 @@ Structure as a Technical Spec with:
 - Bug Tracking & Resolution Process
 
 Format this as a professional technical specification document.`;
-                    break;
-
-                case 'pitch':
-                    userPrompt = `Create a compelling Pitch Deck presentation for: "${userIdea}"
-
-GAME TYPE: ${planType}
-DEVELOPMENT TOOL: ${tool}
-
-Structure as a 10-15 slide pitch deck with these sections:
-
-📈 SLIDE 1: TITLE & HOOK
-- Catchy game title
-- One-sentence description
-- Visual concept
-
-🎯 SLIDE 2: PROBLEM & SOLUTION
-- Market gap or player pain point
-- How your game solves it
-- Unique value proposition
-
-👥 SLIDE 3: TARGET AUDIENCE
-- Primary player demographics
-- Secondary audiences
-- Market size estimates
-
-🎮 SLIDE 4: GAME MECHANICS
-- Core gameplay loop
-- Key features (3-5 main ones)
-- Player progression
-
-💰 SLIDE 5: MONETIZATION STRATEGY
-- Revenue model (ads, IAP, subscriptions, etc.)
-- Pricing strategy
-- Projected revenue streams
-
-📊 SLIDE 6: MARKET ANALYSIS
-- Competitive landscape
-- Market trends
-- Your competitive advantage
-
-👨‍💼 SLIDE 7: TEAM & DEVELOPMENT
-- Key team members
-- Development timeline
-- Technology stack
-
-📈 SLIDE 8: FINANCIAL PROJECTIONS
-- Development budget
-- Launch timeline
-- Revenue projections (3-year)
-
-🎯 SLIDE 9: MARKETING & LAUNCH PLAN
-- Marketing strategy
-- Launch platforms
-- Go-to-market timeline
-
-🏆 SLIDE 10: CALL TO ACTION
-- Investment ask (if applicable)
-- Next steps
-- Contact information
-
-Format each slide clearly with titles, bullet points, and compelling content.`;
-                    break;
-
-                case 'business':
-                    userPrompt = `Create a comprehensive Business Plan for: "${userIdea}"
-
-GAME TYPE: ${planType}
-DEVELOPMENT TOOL: ${tool}
-
-Structure as a professional business plan with:
-
-📋 EXECUTIVE SUMMARY
-- Game concept overview
-- Mission statement
-- Financial projections summary
-- Funding requirements
-
-🎮 COMPANY & PRODUCT DESCRIPTION
-- Company overview (your indie studio)
-- Product description & features
-- Development stage & timeline
-- Intellectual property status
-
-📊 INDUSTRY & MARKET ANALYSIS
-- Game industry overview
-- Target market analysis
-- Market size & growth projections
-- Competitive analysis (direct & indirect competitors)
-
-👥 MARKETING & SALES STRATEGY
-- Marketing plan & channels
-- Sales strategy & distribution
-- Pricing strategy
-- Customer acquisition plan
-
-💼 OPERATIONS PLAN
-- Development team structure
-- Technology requirements
-- Development timeline & milestones
-- Risk management plan
-
-💰 FINANCIAL PLAN
-- Startup costs breakdown
-- Operating expenses (monthly/annual)
-- Revenue projections (Year 1-3)
-- Break-even analysis
-- Funding requirements & use of funds
-
-🎯 FUNDING REQUEST (if applicable)
-- Amount requested
-- Use of funds
-- Repayment terms
-- Exit strategy
-
-Format this as a professional business plan with realistic financial projections and market analysis.`;
-                    break;
-
-                case 'timeline':
-                    userPrompt = `Create a detailed Project Timeline & Milestones for: "${userIdea}"
-
-GAME TYPE: ${planType}
-DEVELOPMENT TOOL: ${tool}
-
-Structure as a comprehensive project timeline with:
-
-📅 PROJECT OVERVIEW
-- Total project duration estimate
-- Major phases breakdown
-- Key milestones & deliverables
-
-🏗️ PHASE 1: PRE-PRODUCTION (Weeks 1-4)
-- Concept development & refinement
-- Market research & competitive analysis
-- Technical feasibility assessment
-- Team assembly & resource planning
-
-🎨 PHASE 2: PROTOTYPE DEVELOPMENT (Weeks 5-8)
-- Core mechanics prototyping
-- Technical architecture setup
-- Initial art & audio assets
-- Playtesting & iteration
-
-🏗️ PHASE 3: PRODUCTION (Weeks 9-20)
-- Full game development
-- Asset creation pipeline
-- Feature implementation
-- Regular playtesting sessions
-
-✨ PHASE 4: POLISH & OPTIMIZATION (Weeks 21-24)
-- Performance optimization
-- Bug fixing & stability improvements
-- UI/UX refinements
-- Final art & audio polish
-
-🚀 PHASE 5: LAUNCH PREPARATION (Weeks 25-26)
-- Marketing materials creation
-- Store page preparation
-- Beta testing coordination
-- Launch checklist completion
-
-📊 PHASE 6: LAUNCH & POST-LAUNCH (Ongoing)
-- App store submissions
-- Marketing campaign execution
-- User feedback collection
-- Update planning & bug fixes
-
-Format with specific weeks, deliverables, responsible parties, and success criteria for each milestone.`;
-                    break;
-
-                case 'budget':
-                    userPrompt = `Create a detailed Budget Breakdown for: "${userIdea}"
-
-GAME TYPE: ${planType}
-DEVELOPMENT TOOL: ${tool}
-
-Structure as a comprehensive budget analysis with:
-
-💰 DEVELOPMENT BUDGET OVERVIEW
-- Total estimated budget
-- Development timeline assumption
-- Team size & composition
-- Cost breakdown categories
-
-👥 PERSONNEL COSTS
-- Lead Developer salary/rate
-- Additional programmers
-- Artists & animators
-- Sound designer & composer
-- QA testers
-- Project manager (if applicable)
-
-🛠️ SOFTWARE & TOOLS
-- Development engine licenses
-- Art & design software
-- Audio production tools
-- Version control & collaboration tools
-- Testing & analytics platforms
-- Marketing tools
-
-🎨 ART & AUDIO ASSETS
-- Character design & animation
-- Environment art & assets
-- UI/UX design
-- Sound effects & music composition
-- Voice acting (if applicable)
-
-📱 PLATFORM & DISTRIBUTION FEES
-- App store fees (Apple, Google)
-- Console publishing fees (if applicable)
-- Payment processing fees
-- Server hosting costs
-
-📢 MARKETING & LAUNCH COSTS
-- Marketing campaign budget
-- App store optimization
-- Community management
-- Influencer partnerships
-- PR & media outreach
-
-⚡ CONTINGENCY & MISCELLANEOUS
-- Unexpected development costs
-- Legal fees & IP protection
-- Insurance & business expenses
-- Hardware upgrades
-- Professional services (consulting, etc.)
-
-📊 BUDGET TIMELINE BREAKDOWN
-- Month-by-month spending projections
-- Cash flow analysis
-- Funding milestone recommendations
-
-Format with realistic cost estimates, assumptions clearly stated, and contingency planning.`;
                     break;
 
                 default: // standard professional plan
@@ -445,7 +504,7 @@ Format this professionally with clear sections, bullet points, and actionable de
                         content: userPrompt
                     }
                 ],
-                max_tokens: isPremium ? (selectedFormat === 'business' || selectedFormat === 'budget' ? 3000 : 2500) : 1500, // More tokens for complex formats
+                max_tokens: isPremium ? 2000 : 1500,
                 temperature: 0.7
             })
         });
@@ -464,311 +523,43 @@ Format this professionally with clear sections, bullet points, and actionable de
     }
 }
 
-function getToolAdvice(tool, type) {
-    switch (tool) {
-        case 'Unity': {
-            if (type === 'platformer') {
-                return 'Use Unity\'s 2D tools: Rigidbody2D for physics-based movement, Tilemap for level design. Check Unity Learn for 2D platformer tutorials.';
-            } else if (type === 'rpg') {
-                return 'Use Unity\'s UI system for inventory and menus, ScriptableObjects for item data. Explore Unity\'s tutorial on RPG basics.';
-            } else if (type === 'shooter') {
-                return 'Use Unity\'s Instantiate for spawning projectiles, Physics for collisions. Refer to Unity\'s shooter tutorials.';
-            } else if (type === 'farming') {
-                return 'Use Tilemaps for the farm grid, Coroutines for crop growth.';
-            } else if (type === 'puzzle') {
-                return 'Use a GridLayoutGroup or manually position tiles; use ScriptableObjects for level data.';
-            } else {
-                return 'Leverage Unity\'s components and scripting for your game logic. Start with Unity\'s beginner tutorials.';
-            }
-        }
-        break;
-        case 'Godot': {
-            if (type === 'platformer') {
-                return 'Use Godot\'s 2D nodes: KinematicBody2D for player movement, TileMap for levels. Refer to Godot\'s official docs for platformer examples.';
-            } else if (type === 'rpg') {
-                return 'Use Godot\'s UI nodes for inventory, Resources for game data. Check Godot\'s community tutorials for RPG development.';
-            } else if (type === 'shooter') {
-                return 'Use Godot\'s RigidBody2D or Area2D for projectiles, signals for shooting. Look into Godot\'s shooter demos.';
-            } else if (type === 'farming') {
-                return 'Use TileMap node + Timers for growth cycles.';
-            } else if (type === 'puzzle') {
-                return 'Use a GridContainer or TileMap; signals for tile interactions.';
-            } else {
-                return 'Utilize Godot\'s node-based architecture for your game. Begin with Godot\'s step-by-step guides.';
-            }
-        }
-        break;
-        case 'Unreal': {
-            if (type === 'platformer') {
-                return 'Use Unreal\'s Paper2D plugin for 2D sprites, Character Movement Component for player. Look into Unreal\'s 2D game tutorials.';
-            } else if (type === 'rpg') {
-                return 'Use Unreal\'s UMG for user interfaces, Blueprints for game logic. Explore Unreal\'s RPG template.';
-            } else if (type === 'shooter') {
-                return 'Use Unreal\'s Projectile Movement Component for bullets, Blueprints for firing. Check Unreal\'s shooter templates.';
-            } else if (type === 'farming') {
-                return 'Use Blueprints + DataTables for crops.';
-            } else if (type === 'puzzle') {
-                return 'Use Blueprints with a grid of Actors; DataTables for level layouts.';
-            } else {
-                return 'Take advantage of Unreal\'s Blueprints for rapid prototyping. Start with Unreal\'s learning resources.';
-            }
-        }
-        break;
-        case 'Windsurf':
-            return 'Since Windsurf is web-focused, use JavaScript with libraries like Phaser.js for game development. Focus on HTML5 Canvas for rendering.';
-        break;
-        case 'Other':
-            return 'Research your chosen tool\'s documentation and community resources for best practices in game development.';
-        break;
-        default:
-            return 'General advice: Follow tutorials and build incrementally.';
-    }
+// Generate business intelligence function
+async function generateBusinessIntelligence(idea, tool) {
+    // Mock business intelligence analysis
+    return `
+        <h2>📊 Business Intelligence Analysis</h2>
+        <h3>Market Analysis for "${idea}"</h3>
+        <div class="bi-section">
+            <h4>🎯 Target Market</h4>
+            <p>Based on your game concept, the primary target audience appears to be indie game enthusiasts aged 18-35 who enjoy ${idea.includes('puzzle') ? 'brain-teasing challenges' : idea.includes('rpg') ? 'story-driven experiences' : 'action-oriented gameplay'}.</p>
+            
+            <h4>📈 Market Size</h4>
+            <p>The indie game market represents approximately $XX billion annually, with niche segments for ${tool}-based games showing strong growth potential.</p>
+            
+            <h4>🏆 Competitive Landscape</h4>
+            <p>Key competitors include established titles in the ${idea.includes('puzzle') ? 'puzzle' : idea.includes('rpg') ? 'RPG' : 'action'} genre. Your unique value proposition focuses on ${idea.includes('tiny') ? 'minimalist, achievable scope' : 'innovative mechanics'}.</p>
+        </div>
+        
+        <div class="bi-section">
+            <h4>💰 Revenue Projections</h4>
+            <p><strong>Year 1:</strong> $XX,XXX - $XX,XXX</p>
+            <p><strong>Year 2:</strong> $XX,XXX - $XX,XXX</p>
+            <p><strong>Year 3:</strong> $XX,XXX - $XX,XXX</p>
+            
+            <h4>🎮 Monetization Strategy</h4>
+            <p>Recommended approach: Premium pricing ($X.XX) with potential for DLC/expansions based on market reception.</p>
+        </div>
+        
+        <div class="bi-section">
+            <h4>🚀 Launch Strategy</h4>
+            <p><strong>Phase 1:</strong> Soft launch on ${tool} marketplace</p>
+            <p><strong>Phase 2:</strong> Marketing push targeting indie game communities</p>
+            <p><strong>Phase 3:</strong> Platform expansion based on performance</p>
+        </div>
+    `;
 }
 
-function generateIdeas() {
-    const ideas = [
-        {
-            name: "Moon Miner Micro",
-            vibe: "Lonely, atmospheric, tiny sci‑fi",
-            core: "Mine → refine → upgrade",
-            scope: "1 level, 3 upgrades",
-            why: "Teaches resource loops without overwhelm"
-        },
-        {
-            name: "Night Shift Runner",
-            vibe: "Flashlight, footsteps, tension",
-            core: "Avoid monster → find keys → escape",
-            scope: "1 map, 1 enemy",
-            why: "Teaches tension + level design"
-        },
-        {
-            name: "Tiny Farm Plot",
-            vibe: "Cozy, simple, Stardew‑lite",
-            core: "Plant → grow → harvest",
-            scope: "3 crops, 3x3 grid",
-            why: "Teaches grids + timers"
-        },
-        {
-            name: "Block Push Basement",
-            vibe: "Quiet, brainy, minimal",
-            core: "Push blocks → reach goal",
-            scope: "3 handcrafted levels",
-            why: "Teaches grid logic"
-        },
-        {
-            name: "Neon Dash",
-            vibe: "Fast, glowing, synthwave",
-            core: "Run → jump → dash",
-            scope: "1 level, 1 enemy",
-            why: "Teaches movement + collision"
-        },
-        {
-            name: "Micro Dungeon",
-            vibe: "Tiny fantasy",
-            core: "Fight → loot → upgrade",
-            scope: "1 dungeon, 3 items",
-            why: "Teaches stats + progression"
-        },
-        {
-            name: "One Room Survival",
-            vibe: "Claustrophobic, escalating",
-            core: "Gather → craft → survive",
-            scope: "1 room, 3 resources",
-            why: "Teaches loops + timers"
-        },
-        {
-            name: "Ghost in the Gallery",
-            vibe: "Eerie museum",
-            core: "Solve puzzles → avoid ghost",
-            scope: "1 map, 2 puzzles",
-            why: "Teaches pacing + atmosphere"
-        },
-        {
-            name: "Shape Swap",
-            vibe: "Bright, friendly",
-            core: "Swap shapes → match 3",
-            scope: "1 board, 3 tile types",
-            why: "Teaches match logic"
-        }
-    ];
-    const shuffled = ideas.sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 3);
-    let html = '<h2>Here are 3 game ideas to spark your creativity!</h2><br><br>';
-    selected.forEach(idea => {
-        html += `<h3>${idea.name}</h3><p><strong>Vibe:</strong> ${idea.vibe}</p><ul><li><strong>Core Loop:</strong> ${idea.core}</li><li><strong>Scope:</strong> ${idea.scope}</li></ul><p><strong>Why it works:</strong> ${idea.why}</p><br><br>`;
-    });
-    document.getElementById('output').innerHTML = html;
-    document.getElementById('confirmation').innerText = '';
-}
-
-document.getElementById('ideas').addEventListener('click', generateIdeas);
-
-document.getElementById('view-portfolio').addEventListener('click', function() {
-    if (!currentUser) {
-        showAuthModal();
-        return;
-    }
-    
-    if (userSubscription === 'free') {
-        alert('Viewing your portfolio is a Premium feature. Upgrade to access your saved game plans!');
-        document.getElementById('upgrade-btn').click();
-        return;
-    }
-    
-    showPortfolioModal();
-});
-
-document.getElementById('save-plan').addEventListener('click', async function() {
-    const output = document.getElementById('output');
-    const confirmation = document.getElementById('confirmation');
-    
-    if (!currentUser) {
-        confirmation.innerText = 'Please sign in to save plans!';
-        setTimeout(() => confirmation.innerText = '', 3000);
-        return;
-    }
-    
-    if (userSubscription === 'free') {
-        confirmation.innerHTML = 'Saving plans to portfolio is a Premium feature! <a href="#" onclick="document.getElementById(\'upgrade-btn\').click()">Upgrade now</a> to save and organize your game plans.';
-        setTimeout(() => confirmation.innerText = '', 5000);
-        return;
-    }
-    
-    if (output.innerText.trim() === '' || output.innerText === 'Your plan will appear here. Try typing an idea or click \'Give me an idea\' to start.') {
-        confirmation.innerText = 'No plan to save! Generate a plan first.';
-        setTimeout(() => confirmation.innerText = '', 3000);
-        return;
-    }
-    
-    try {
-        // Get plan title from user
-        const planTitle = prompt('Enter a name for this plan:', 'My Game Plan');
-        if (!planTitle || planTitle.trim() === '') {
-            confirmation.innerText = 'Plan not saved - no title provided.';
-            setTimeout(() => confirmation.innerText = '', 3000);
-            return;
-        }
-        
-        // Save plan to Firestore
-        const planData = {
-            title: planTitle.trim(),
-            content: output.innerHTML,
-            textContent: output.innerText,
-            idea: document.getElementById('idea').value,
-            tool: document.getElementById('tool').value,
-            format: document.getElementById('plan-format') ? document.getElementById('plan-format').value : 'standard',
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
-        
-        await savePlanToPortfolio(planData);
-        
-        confirmation.innerText = `✅ Plan "${planTitle}" saved to your portfolio!`;
-        setTimeout(() => confirmation.innerText = '', 3000);
-        
-    } catch (error) {
-        console.error('Error saving plan:', error);
-        confirmation.innerText = '❌ Failed to save plan. Please try again.';
-        setTimeout(() => confirmation.innerText = '', 3000);
-    }
-});
-
-document.getElementById('business-intelligence').addEventListener('click', function() {
-    // Check if user is logged in
-    if (!currentUser) {
-        showAuthModal();
-        return;
-    }
-    
-    // Check if user is premium
-    if (userSubscription === 'free') {
-        alert('Business Intelligence Analysis is a Premium feature. Upgrade to access market analysis, revenue projections, and competitive insights!');
-        document.getElementById('upgrade-btn').click();
-        return;
-    }
-    
-    const generateBtn = document.getElementById('generate');
-    generateBtn.disabled = true;
-    document.getElementById('loading').style.display = 'block';
-    
-    setTimeout(async () => {
-        const idea = document.getElementById('idea').value.trim().toLowerCase();
-        const tool = document.getElementById('tool').value;
-        
-        if (!idea) {
-            alert('Please enter a game idea first!');
-            document.getElementById('loading').style.display = 'none';
-            generateBtn.disabled = false;
-            return;
-        }
-        
-        const biAnalysis = await generateBusinessIntelligence(idea, tool);
-        document.getElementById('output').innerHTML = biAnalysis;
-        document.getElementById('loading').style.display = 'none';
-        generateBtn.disabled = false;
-    }, 600);
-});
-
-document.getElementById('output').innerHTML = '<p>🎮 Your game plan will appear here! Type an idea above or click "💡 Give Me Game Ideas" to get started!</p>';
-
-// Voice input functionality
-const voiceBtn = document.getElementById('voice-btn');
-const voiceStatus = document.getElementById('voice-status');
-const ideaTextarea = document.getElementById('idea');
-
-// Check if browser supports speech recognition
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-    
-    recognition.onstart = function() {
-        voiceBtn.classList.add('recording');
-        voiceStatus.textContent = '🎤 Listening... Speak now!';
-        voiceBtn.innerHTML = '⏹️';
-    };
-    
-    recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        ideaTextarea.value = transcript;
-        voiceStatus.textContent = '✅ Voice input added!';
-        setTimeout(() => {
-            voiceStatus.textContent = '';
-        }, 2000);
-    };
-    
-    recognition.onerror = function(event) {
-        voiceStatus.textContent = '❌ Voice error: ' + event.error;
-        setTimeout(() => {
-            voiceStatus.textContent = '';
-        }, 3000);
-    };
-    
-    recognition.onend = function() {
-        voiceBtn.classList.remove('recording');
-        voiceBtn.innerHTML = '🎤';
-    };
-    
-    voiceBtn.addEventListener('click', function() {
-        if (voiceBtn.classList.contains('recording')) {
-            recognition.stop();
-        } else {
-            recognition.start();
-        }
-    });
-} else {
-    voiceBtn.style.display = 'none';
-    voiceStatus.textContent = '📝 Voice input not supported in this browser';
-}
-
-// ===== BUSINESS INTELLIGENCE ANALYSIS =====
-
-// ===== PORTFOLIO MANAGEMENT =====
-
-// Save plan to user's portfolio in Firestore
+// Portfolio management functions
 async function savePlanToPortfolio(planData) {
     if (!currentUser) throw new Error('User not authenticated');
     
@@ -784,7 +575,6 @@ async function savePlanToPortfolio(planData) {
     });
 }
 
-// Load user's portfolio plans
 async function loadUserPortfolio() {
     if (!currentUser) return [];
     
@@ -810,7 +600,6 @@ async function loadUserPortfolio() {
     }
 }
 
-// Display portfolio modal for premium users
 function showPortfolioModal() {
     // Create portfolio modal if it doesn't exist
     let portfolioModal = document.getElementById('portfolio-modal');
@@ -830,9 +619,12 @@ function showPortfolioModal() {
         document.body.appendChild(portfolioModal);
         
         // Add close handler
-        document.getElementById('close-portfolio').addEventListener('click', () => {
-            portfolioModal.style.display = 'none';
-        });
+        const closeBtn = document.getElementById('close-portfolio');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                portfolioModal.style.display = 'none';
+            });
+        }
     }
     
     // Load and display portfolio
@@ -869,7 +661,6 @@ function showPortfolioModal() {
     portfolioModal.style.display = 'flex';
 }
 
-// View a specific plan from portfolio
 async function viewPortfolioPlan(planId) {
     try {
         const plans = await loadUserPortfolio();
@@ -877,7 +668,10 @@ async function viewPortfolioPlan(planId) {
         
         if (plan) {
             document.getElementById('output').innerHTML = plan.content;
-            document.getElementById('portfolio-modal').style.display = 'none';
+            const portfolioModal = document.getElementById('portfolio-modal');
+            if (portfolioModal) {
+                portfolioModal.style.display = 'none';
+            }
             document.getElementById('confirmation').innerText = `Loaded "${plan.title}" from your portfolio!`;
             setTimeout(() => document.getElementById('confirmation').innerText = '', 3000);
         }
@@ -887,7 +681,6 @@ async function viewPortfolioPlan(planId) {
     }
 }
 
-// Delete a plan from portfolio
 async function deletePortfolioPlan(planId) {
     if (!confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
         return;
@@ -911,32 +704,28 @@ async function deletePortfolioPlan(planId) {
     }
 }
 
-// Update upgrade button to handle real Stripe checkout
-document.getElementById('upgrade-btn').addEventListener('click', async function() {
-    // Stripe pricing table handles the checkout, just show confirmation
-    const conf = document.getElementById('confirmation');
-    conf.innerText = '🚀 Redirecting to Stripe checkout...';
-    setTimeout(() => conf.innerText = '', 3000);
-});
-
-// ===== FREEMIUM AUTHENTICATION & USER MANAGEMENT =====
-
-// Initialize app when Firebase loads
-window.addEventListener('load', () => {
-    // Show auth modal immediately for testing
-    showAuthModal();
+// User data functions
+async function updateUserData(updates) {
+    if (!currentUser) return;
     
-    // Wait for Firebase to be available
-    setTimeout(() => {
-        if (window.firebaseAuth) {
-            initializeAuth();
-        } else {
-            console.error('Firebase not loaded');
-        }
-    }, 1000);
-});
+    const { updateDoc, doc } = window.firebaseFunctions;
+    await updateDoc(doc(window.firebaseDb, 'users', currentUser.uid), updates);
+}
 
-// Initialize authentication
+async function getUserData(field) {
+    if (!currentUser) return null;
+    
+    try {
+        const { doc, getDoc } = window.firebaseFunctions;
+        const userDoc = await getDoc(doc(window.firebaseDb, 'users', currentUser.uid));
+        return userDoc.exists() ? userDoc.data()[field] : null;
+    } catch (error) {
+        console.error('Error getting user data:', error);
+        return null;
+    }
+}
+
+// Authentication functions
 function initializeAuth() {
     const { onAuthStateChanged } = window.firebaseFunctions;
     
@@ -954,7 +743,6 @@ function initializeAuth() {
     });
 }
 
-// Load user data from Firestore
 async function loadUserData() {
     if (!currentUser) return;
     
@@ -985,7 +773,6 @@ async function loadUserData() {
     }
 }
 
-// Create new user data
 async function createUserData() {
     const { setDoc, doc } = window.firebaseFunctions;
     const userData = {
@@ -1002,36 +789,15 @@ async function createUserData() {
     userUsageToday = 0;
 }
 
-// Update user data in Firestore
-async function updateUserData(updates) {
-    if (!currentUser) return;
-    
-    const { updateDoc, doc } = window.firebaseFunctions;
-    await updateDoc(doc(window.firebaseDb, 'users', currentUser.uid), updates);
-}
-
-// Get specific user data field
-async function getUserData(field) {
-    if (!currentUser) return null;
-    
-    try {
-        const { doc, getDoc } = window.firebaseFunctions;
-        const userDoc = await getDoc(doc(window.firebaseDb, 'users', currentUser.uid));
-        return userDoc.exists() ? userDoc.data()[field] : null;
-    } catch (error) {
-        console.error('Error getting user data:', error);
-        return null;
-    }
-}
-
-// Update UI based on user state
 function updateUIForUser() {
     // Update premium banner
     const banner = document.getElementById('premium-banner');
-    if (userSubscription === 'free') {
-        banner.style.display = 'block';
-    } else {
-        banner.style.display = 'none';
+    if (banner) {
+        if (userSubscription === 'free') {
+            banner.style.display = 'block';
+        } else {
+            banner.style.display = 'none';
+        }
     }
     
     // Show/hide premium features
@@ -1041,15 +807,15 @@ function updateUIForUser() {
     const viewPortfolioBtn = document.getElementById('view-portfolio');
     
     if (userSubscription === 'premium' || userSubscription === 'pro') {
-        formatSelection.style.display = 'block';
-        businessIntelligenceBtn.style.display = 'block';
-        savePlanBtn.style.display = 'block';
-        viewPortfolioBtn.style.display = 'block';
+        if (formatSelection) formatSelection.style.display = 'block';
+        if (businessIntelligenceBtn) businessIntelligenceBtn.style.display = 'block';
+        if (savePlanBtn) savePlanBtn.style.display = 'block';
+        if (viewPortfolioBtn) viewPortfolioBtn.style.display = 'block';
     } else {
-        formatSelection.style.display = 'none';
-        businessIntelligenceBtn.style.display = 'none';
-        savePlanBtn.style.display = 'none';
-        viewPortfolioBtn.style.display = 'none';
+        if (formatSelection) formatSelection.style.display = 'none';
+        if (businessIntelligenceBtn) businessIntelligenceBtn.style.display = 'none';
+        if (savePlanBtn) savePlanBtn.style.display = 'none';
+        if (viewPortfolioBtn) viewPortfolioBtn) viewPortfolioBtn.style.display = 'none';
     }
     
     // Add user account info
@@ -1059,12 +825,8 @@ function updateUIForUser() {
     if (userSubscription === 'free') {
         addUsageLimitUI();
     }
-    
-    // Gate premium features
-    gatePremiumFeatures();
 }
 
-// Add user account UI
 function addUserAccountUI() {
     // Remove existing account UI
     const existing = document.querySelector('.user-account');
@@ -1079,54 +841,59 @@ function addUserAccountUI() {
         <button class="logout-btn" onclick="logoutUser()">Logout</button>
     `;
     
-    document.querySelector('.container').appendChild(accountDiv);
+    const container = document.querySelector('.container');
+    if (container) {
+        container.appendChild(accountDiv);
+    }
 }
 
-// Add usage limit UI for free users
 function addUsageLimitUI() {
     const existing = document.querySelector('.usage-limit');
     if (existing) existing.remove();
     
     const remaining = DAILY_LIMIT_FREE - userUsageToday;
-    if (remaining <= 0) {
-        const limitDiv = document.createElement('div');
-        limitDiv.className = 'usage-limit';
-        limitDiv.innerHTML = '⚠️ Daily limit reached! <a href="#" onclick="upgradeToPro()">Upgrade to Pro</a> for unlimited plans.';
-        document.querySelector('main').insertBefore(limitDiv, document.querySelector('main').firstChild);
-    } else {
-        const limitDiv = document.createElement('div');
-        limitDiv.className = 'usage-limit';
-        limitDiv.innerHTML = `📊 ${remaining} free plans remaining today`;
-        document.querySelector('main').insertBefore(limitDiv, document.querySelector('main').firstChild);
+    const main = document.querySelector('main');
+    if (main) {
+        if (remaining <= 0) {
+            const limitDiv = document.createElement('div');
+            limitDiv.className = 'usage-limit';
+            limitDiv.innerHTML = '⚠️ Daily limit reached! <a href="#" onclick="upgradeToPro()">Upgrade to Pro</a> for unlimited plans.';
+            main.insertBefore(limitDiv, main.firstChild);
+        } else {
+            const limitDiv = document.createElement('div');
+            limitDiv.className = 'usage-limit';
+            limitDiv.innerHTML = `📊 ${remaining} free plans remaining today`;
+            main.insertBefore(limitDiv, main.firstChild);
+        }
     }
 }
 
-// Gate premium features
-function gatePremiumFeatures() {
-    // PDF export button (will be added later)
-    // For now, just update the copy button behavior
-    const copyBtn = document.getElementById('copy');
-    if (userSubscription === 'free') {
-        copyBtn.title = 'Copy to clipboard (Pro users get PDF export)';
-    } else {
-        copyBtn.title = 'Copy to clipboard';
-    }
-}
-
-// Show auth modal
 function showAuthModal() {
-    document.getElementById('auth-modal').style.display = 'flex';
-    document.querySelector('.container').style.display = 'none';
-    document.getElementById('premium-banner').style.display = 'none';
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) {
+        authModal.style.display = 'flex';
+    }
+    const container = document.querySelector('.container');
+    if (container) {
+        container.style.display = 'none';
+    }
+    const banner = document.getElementById('premium-banner');
+    if (banner) {
+        banner.style.display = 'none';
+    }
 }
 
-// Show main app
 function showMainApp() {
-    document.getElementById('auth-modal').style.display = 'none';
-    document.querySelector('.container').style.display = 'block';
+    const authModal = document.getElementById('auth-modal');
+    if (authModal) {
+        authModal.style.display = 'none';
+    }
+    const container = document.querySelector('.container');
+    if (container) {
+        container.style.display = 'block';
+    }
 }
 
-// Logout user
 function logoutUser() {
     const { signOut } = window.firebaseFunctions;
     signOut(window.firebaseAuth).then(() => {
@@ -1139,143 +906,90 @@ function logoutUser() {
     });
 }
 
-// Upgrade to Pro (show tier selection)
 function upgradeToPro() {
     if (!currentUser) {
         alert('Please sign in first to upgrade!');
         return;
     }
     
-    showTierSelection();
-}
-
-// Show tier selection modal
-function showTierSelection() {
-    document.getElementById('tier-modal').style.display = 'flex';
-    document.querySelector('.container').style.display = 'none';
-    document.getElementById('premium-banner').style.display = 'none';
-    document.getElementById('auth-modal').style.display = 'none';
-}
-
-// Handle tier selection and payment
-function selectTier(tier) {
-    const tierPrices = {
-        'premium': {
-            priceId: 'price_premium_tier',
-            amount: '$4.99/month',
-            features: ['Unlimited basic plans', 'PDF export', 'Save plans']
-        },
-        'pro': {
-            priceId: 'price_pro_tier', 
-            amount: '$9.99/month',
-            features: ['Everything in Premium', 'Detailed professional plans', 'Multiple formats', 'Business intelligence', 'Portfolio builder', 'Advanced customization']
-        }
-    };
-    
-    const selectedTier = tierPrices[tier];
-    if (!selectedTier) return;
-    
-    // Show confirmation
-    const confirmMessage = `Upgrade to ${tier.toUpperCase()} tier for ${selectedTier.amount}?\n\nFeatures included:\n${selectedTier.features.map(f => '• ' + f).join('\n')}`;
-    
-    if (confirm(confirmMessage)) {
-        // Here you would integrate with Stripe
-        alert(`Redirecting to payment for ${tier.toUpperCase()} tier...\n\nIn production, this would connect to Stripe Checkout with price ID: ${selectedTier.priceId}`);
-        
-        // Close modal
-        document.getElementById('tier-modal').style.display = 'none';
-        document.querySelector('.container').style.display = 'block';
+    // Scroll to upgrade button
+    const upgradeBtn = document.getElementById('upgrade-btn');
+    if (upgradeBtn) {
+        upgradeBtn.scrollIntoView({ behavior: 'smooth' });
+        upgradeBtn.click();
     }
 }
 
 // Auth event handlers
 document.addEventListener('DOMContentLoaded', () => {
     // Login form
-    document.getElementById('login-btn').addEventListener('click', async () => {
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        
-        try {
-            const { signInWithEmailAndPassword } = window.firebaseFunctions;
-            await signInWithEmailAndPassword(window.firebaseAuth, email, password);
-            document.getElementById('auth-error').style.display = 'none';
-        } catch (error) {
-            document.getElementById('auth-error').style.display = 'block';
-            document.getElementById('auth-error').textContent = error.message;
-        }
-    });
+    const loginBtn = document.getElementById('login-btn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', async () => {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const { signInWithEmailAndPassword } = window.firebaseFunctions;
+                await signInWithEmailAndPassword(window.firebaseAuth, email, password);
+                const authError = document.getElementById('auth-error');
+                if (authError) {
+                    authError.style.display = 'none';
+                }
+            } catch (error) {
+                const authError = document.getElementById('auth-error');
+                if (authError) {
+                    authError.style.display = 'block';
+                    authError.textContent = error.message;
+                }
+            }
+        });
+    }
     
     // Signup form
-    document.getElementById('signup-btn').addEventListener('click', async () => {
-        const email = document.getElementById('signup-email').value;
-        const password = document.getElementById('signup-password').value;
-        
-        try {
-            const { createUserWithEmailAndPassword } = window.firebaseFunctions;
-            await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
-            document.getElementById('auth-error').style.display = 'none';
-        } catch (error) {
-            document.getElementById('auth-error').style.display = 'block';
-            document.getElementById('auth-error').textContent = error.message;
-        }
-    });
+    const signupBtn = document.getElementById('signup-btn');
+    if (signupBtn) {
+        signupBtn.addEventListener('click', async () => {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            try {
+                const { createUserWithEmailAndPassword } = window.firebaseFunctions;
+                await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+                const authError = document.getElementById('auth-error');
+                if (authError) {
+                    authError.style.display = 'none';
+                }
+            } catch (error) {
+                const authError = document.getElementById('auth-error');
+                if (authError) {
+                    authError.style.display = 'block';
+                    authError.textContent = error.message;
+                }
+            }
+        });
+    }
     
     // Form switching
-    document.getElementById('show-signup').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('signup-form').style.display = 'block';
-    });
-    
-    document.getElementById('show-login').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('signup-form').style.display = 'none';
-        document.getElementById('login-form').style.display = 'block';
-    });
-    
-    // Upgrade button
-    document.getElementById('upgrade-btn').addEventListener('click', () => {
-        upgradeToPro();
-    });
-    
-    // Tier selection
-    document.getElementById('select-tier-btn').addEventListener('click', () => {
-        // For demo, show tier options
-        const tierChoice = prompt('Choose tier (premium/pro):');
-        if (tierChoice) {
-            selectTier(tierChoice.toLowerCase());
-        }
-    });
-});
-
-// ===== STRIPE PAYMENT INTEGRATION =====
-
-// Create Stripe checkout session
-async function createStripeCheckout() {
-    try {
-        const response = await fetch('https://true-scope-mvp.vercel.app/api/create-checkout-session', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                priceId: 'price_1O2H3R2eZvKYlo2C5xL2Z', // Pro subscription price ID
-                successUrl: window.location.origin + '/success.html',
-                cancelUrl: window.location.origin + '/cancel.html',
-            }),
+    const showSignupBtn = document.getElementById('show-signup');
+    if (showSignupBtn) {
+        showSignupBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            if (loginForm) loginForm.style.display = 'none';
+            if (signupForm) signupForm.style.display = 'block';
         });
-        
-        const session = await response.json();
-        
-        // Redirect to Stripe Checkout
-        const result = await stripeInstance.redirectToCheckout({ sessionId: session.id });
-        
-        if (result.error) {
-            console.error('Stripe error:', result.error.message);
-            alert('Payment failed. Please try again.');
-        }
-    } catch (error) {
-        console.error('Checkout error:', error);
-        alert('Unable to start payment. Please try again.');
     }
-}
+    
+    const showLoginBtn = document.getElementById('show-login');
+    if (showLoginBtn) {
+        showLoginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            if (loginForm) loginForm.style.display = 'block';
+            if (signupForm) signupForm.style.display = 'none';
+        });
+    }
+});
