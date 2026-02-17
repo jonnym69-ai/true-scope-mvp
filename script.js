@@ -1,8 +1,16 @@
+// Vercel Analytics
+import { Analytics } from "@vercel/analytics/next";
+
 // Global user state
 let currentUser = null;
 let userSubscription = null;
 let userUsageToday = 0;
 const DAILY_LIMIT_FREE = 3;
+
+// Initialize analytics
+const analytics = new Analytics({
+    mode: 'production'
+});
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -994,15 +1002,22 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     `;
     document.body.appendChild(testDiv);
     
+    // Make updateUIForUser globally available for HTML onclick handlers
+    window.updateUIForUser = updateUIForUser;
+    
     // Make function globally available
     window.testSubscription = function(tier) {
         console.log('Testing subscription tier:', tier);
         userSubscription = tier;
         updateUIForUser();
+        
+        // Track subscription change in analytics
+        analytics.track('subscription_change', {
+            tier: tier,
+            previous_tier: userSubscription,
+            source: 'dev_testing'
+        });
     };
-    
-    // Make updateUIForUser globally available for HTML onclick handlers
-    window.updateUIForUser = updateUIForUser;
 }
 
 function upgradeToPro() {
