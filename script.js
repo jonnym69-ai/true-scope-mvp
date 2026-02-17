@@ -711,23 +711,6 @@ document.getElementById('business-intelligence').addEventListener('click', funct
 
 // Wait for DOM to be ready before adding event listeners
 document.addEventListener('DOMContentLoaded', function() {
-    const shareBtn = document.getElementById('share-page');
-    if (shareBtn) {
-        shareBtn.addEventListener('click', function() {
-    const url = 'https://twitter.com/intent/tweet?text=Check%20out%20True%20Scope%20-%20a%20tool%20that%20turns%20game%20ideas%20into%20tiny%20buildable%20plans!%20https://true-scope-mvp.vercel.app/';
-    try {
-        window.open(url, '_blank');
-    } catch {
-        navigator.clipboard.writeText('Check out True Scope - a tool that turns game ideas into tiny buildable plans! https://true-scope-mvp.vercel.app/').then(() => {
-            const conf = document.getElementById('confirmation');
-            conf.innerText = 'Share text copied to clipboard!';
-            setTimeout(() => conf.innerText = '', 2000);
-        });
-    }
-});
-
-// Wrap remaining event listeners in DOMContentLoaded as well
-document.addEventListener('DOMContentLoaded', function() {
     const shareOutputBtn = document.getElementById('share-output');
     if (shareOutputBtn) {
         shareOutputBtn.addEventListener('click', function() {
