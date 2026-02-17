@@ -957,6 +957,31 @@ setInterval(async () => {
     }
 }, 30000); // Check every 30 seconds
 
+// Development testing buttons
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    const testDiv = document.createElement('div');
+    testDiv.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: #333;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 9999;
+        font-size: 12px;
+    `;
+    testDiv.innerHTML = `
+        <div style="margin-bottom: 5px;"><strong>🧪 Dev Testing</strong></div>
+        <button onclick="userSubscription='free'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Free</button>
+        <button onclick="userSubscription='premium'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Premium</button>
+        <button onclick="userSubscription='pro'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Pro</button>
+        <button onclick="userSubscription='studio'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Studio</button>
+        <button onclick="userSubscription='enterprise'; updateUIForUser();" style="margin: 2px; padding: 5px; font-size: 11px;">Enterprise</button>
+    `;
+    document.body.appendChild(testDiv);
+}
+
 function upgradeToPro() {
     if (!currentUser) {
         alert('Please sign in first to upgrade!');
