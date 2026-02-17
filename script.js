@@ -836,17 +836,62 @@ function updateUIForUser() {
     });
     
     if (userSubscription === 'premium' || userSubscription === 'pro' || userSubscription === 'studio' || userSubscription === 'enterprise') {
-        console.log('Showing premium features for tier:', userSubscription);
-        if (formatSelection) formatSelection.style.display = 'block';
-        if (businessIntelligenceBtn) businessIntelligenceBtn.style.display = 'block';
-        if (savePlanBtn) savePlanBtn.style.display = 'block';
-        if (viewPortfolioBtn) viewPortfolioBtn.style.display = 'block';
+        console.log('Enabling premium features for tier:', userSubscription);
+        // Enable all premium features
+        if (formatSelection) {
+            formatSelection.style.display = 'block';
+            formatSelection.disabled = false;
+        }
+        if (businessIntelligenceBtn) {
+            businessIntelligenceBtn.style.display = 'block';
+            businessIntelligenceBtn.disabled = false;
+            businessIntelligenceBtn.onclick = generateBusinessIntelligence;
+        }
+        if (savePlanBtn) {
+            savePlanBtn.style.display = 'block';
+            savePlanBtn.disabled = false;
+            savePlanBtn.onclick = savePlanToPortfolio;
+        }
+        if (viewPortfolioBtn) {
+            viewPortfolioBtn.style.display = 'block';
+            viewPortfolioBtn.disabled = false;
+            viewPortfolioBtn.onclick = viewPortfolio;
+        }
     } else {
-        console.log('Hiding premium features for tier:', userSubscription);
-        if (formatSelection) formatSelection.style.display = 'none';
-        if (businessIntelligenceBtn) businessIntelligenceBtn.style.display = 'none';
-        if (savePlanBtn) savePlanBtn.style.display = 'none';
-        if (viewPortfolioBtn) viewPortfolioBtn.style.display = 'none';
+        console.log('Showing disabled premium features for free tier');
+        // Show but disable premium features with upgrade prompts
+        if (formatSelection) {
+            formatSelection.style.display = 'block';
+            formatSelection.disabled = true;
+            formatSelection.title = 'Upgrade to Premium to use this feature';
+        }
+        if (businessIntelligenceBtn) {
+            businessIntelligenceBtn.style.display = 'block';
+            businessIntelligenceBtn.disabled = true;
+            businessIntelligenceBtn.title = 'Upgrade to Pro to use Business Intelligence';
+            businessIntelligenceBtn.onclick = () => {
+                alert('🚀 Upgrade to Pro to unlock Business Intelligence Analysis!\n\nGet detailed market research, revenue projections, and competitive analysis.');
+                upgradeToPro();
+            };
+        }
+        if (savePlanBtn) {
+            savePlanBtn.style.display = 'block';
+            savePlanBtn.disabled = true;
+            savePlanBtn.title = 'Upgrade to Studio to save plans';
+            savePlanBtn.onclick = () => {
+                alert('📁 Upgrade to Studio to save unlimited plans to your portfolio!\n\nBuild your game development portfolio and track your progress.');
+                upgradeToPro();
+            };
+        }
+        if (viewPortfolioBtn) {
+            viewPortfolioBtn.style.display = 'block';
+            viewPortfolioBtn.disabled = true;
+            viewPortfolioBtn.title = 'Upgrade to Studio to view portfolio';
+            viewPortfolioBtn.onclick = () => {
+                alert('📁 Upgrade to Studio to manage your portfolio!\n\nAccess all your saved game plans and projects.');
+                upgradeToPro();
+            };
+        }
     }
     
     // Add user account info
