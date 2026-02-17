@@ -987,6 +987,9 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
         userSubscription = tier;
         updateUIForUser();
     };
+    
+    // Make updateUIForUser globally available for HTML onclick handlers
+    window.updateUIForUser = updateUIForUser;
 }
 
 function upgradeToPro() {
