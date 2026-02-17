@@ -864,13 +864,17 @@ function updateUIForUser() {
             formatSelection.style.display = 'block';
             formatSelection.disabled = true;
             formatSelection.title = 'Upgrade to Premium to use this feature';
+            formatSelection.onchange = () => {
+                alert('📋 Upgrade to Premium to unlock Plan Format Selection!\n\nGet access to:\n• Technical Specification\n• Pitch Deck Format\n• Business Plan\n• Timeline & Milestones\n• Budget Breakdown\n\nOnly £4.99/month');
+                upgradeToPro();
+            };
         }
         if (businessIntelligenceBtn) {
             businessIntelligenceBtn.style.display = 'block';
             businessIntelligenceBtn.disabled = true;
             businessIntelligenceBtn.title = 'Upgrade to Pro to use Business Intelligence';
             businessIntelligenceBtn.onclick = () => {
-                alert('🚀 Upgrade to Pro to unlock Business Intelligence Analysis!\n\nGet detailed market research, revenue projections, and competitive analysis.');
+                alert('� Upgrade to Pro to unlock Business Intelligence Analysis!\n\nGet access to:\n• Market Research & Analysis\n• Revenue Projections\n• Competitive Landscape\n• Launch Strategy\n• Performance Optimization\n\nOnly £8.99/month');
                 upgradeToPro();
             };
         }
@@ -879,7 +883,7 @@ function updateUIForUser() {
             savePlanBtn.disabled = true;
             savePlanBtn.title = 'Upgrade to Studio to save plans';
             savePlanBtn.onclick = () => {
-                alert('📁 Upgrade to Studio to save unlimited plans to your portfolio!\n\nBuild your game development portfolio and track your progress.');
+                alert('📁 Upgrade to Studio to save unlimited plans to your portfolio!\n\nGet access to:\n• Unlimited Plan Saving\n• Portfolio Management\n• Project Organization\n• Progress Tracking\n• Advanced Export Options\n\nOnly £17.99/month');
                 upgradeToPro();
             };
         }
@@ -888,7 +892,7 @@ function updateUIForUser() {
             viewPortfolioBtn.disabled = true;
             viewPortfolioBtn.title = 'Upgrade to Studio to view portfolio';
             viewPortfolioBtn.onclick = () => {
-                alert('📁 Upgrade to Studio to manage your portfolio!\n\nAccess all your saved game plans and projects.');
+                alert('📁 Upgrade to Studio to manage your portfolio!\n\nGet access to:\n• View Saved Plans\n• Portfolio Dashboard\n• Project History\n• Search & Filter\n• Portfolio Analytics\n\nOnly £17.99/month');
                 upgradeToPro();
             };
         }
