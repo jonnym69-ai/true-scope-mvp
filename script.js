@@ -181,43 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Business intelligence button
     const businessIntelligenceBtn = document.getElementById('business-intelligence');
-    if (businessIntelligenceBtn) {
-        businessIntelligenceBtn.addEventListener('click', function() {
-            // Check if user is logged in
-            if (!currentUser) {
-                showAuthModal();
-                return;
-            }
-            
-            // Check if user is premium
-            if (userSubscription === 'free') {
-                alert('Business Intelligence Analysis is a Premium feature. Upgrade to access market analysis, revenue projections, and competitive insights!');
-                document.getElementById('upgrade-btn').click();
-                return;
-            }
-            
-            const generateBtn = document.getElementById('generate');
-            generateBtn.disabled = true;
-            document.getElementById('loading').style.display = 'block';
-            
-            setTimeout(async () => {
-                const idea = document.getElementById('idea').value.trim().toLowerCase();
-                const tool = document.getElementById('tool').value;
-                
-                if (!idea) {
-                    alert('Please enter a game idea first!');
-                    document.getElementById('loading').style.display = 'none';
-                    generateBtn.disabled = false;
-                    return;
-                }
-                
-                const biAnalysis = await generateBusinessIntelligence(idea, tool);
-                document.getElementById('output').innerHTML = biAnalysis;
-                document.getElementById('loading').style.display = 'none';
-                generateBtn.disabled = false;
-            }, 600);
-        });
-    }
+    // Event listener is now set in updateUIForUser() based on subscription status
 
     // Upgrade button
     const upgradeBtn = document.getElementById('upgrade-btn');
