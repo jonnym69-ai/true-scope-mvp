@@ -754,6 +754,12 @@ async function loadUserData() {
             userSubscription = userData.subscription || 'free';
             userUsageToday = userData.usageToday || 0;
             
+            console.log('User data loaded:', {
+                subscription: userSubscription,
+                usageToday: userUsageToday,
+                lastUsageDate: userData.lastUsageDate
+            });
+            
             // Reset usage if it's a new day
             const lastUsageDate = userData.lastUsageDate;
             const today = new Date().toDateString();
@@ -763,6 +769,7 @@ async function loadUserData() {
             }
         } else {
             // New user
+            console.log('Creating new user data');
             await createUserData();
         }
         
@@ -789,6 +796,8 @@ async function createUserData() {
 }
 
 function updateUIForUser() {
+    console.log('updateUIForUser called, userSubscription:', userSubscription);
+    
     // Update premium banner
     const banner = document.getElementById('premium-banner');
     if (banner) {
@@ -805,12 +814,21 @@ function updateUIForUser() {
     const savePlanBtn = document.getElementById('save-plan');
     const viewPortfolioBtn = document.getElementById('view-portfolio');
     
+    console.log('Premium elements found:', {
+        formatSelection: !!formatSelection,
+        businessIntelligenceBtn: !!businessIntelligenceBtn,
+        savePlanBtn: !!savePlanBtn,
+        viewPortfolioBtn: !!viewPortfolioBtn
+    });
+    
     if (userSubscription === 'premium' || userSubscription === 'pro') {
+        console.log('Showing premium features');
         if (formatSelection) formatSelection.style.display = 'block';
         if (businessIntelligenceBtn) businessIntelligenceBtn.style.display = 'block';
         if (savePlanBtn) savePlanBtn.style.display = 'block';
         if (viewPortfolioBtn) viewPortfolioBtn.style.display = 'block';
     } else {
+        console.log('Hiding premium features');
         if (formatSelection) formatSelection.style.display = 'none';
         if (businessIntelligenceBtn) businessIntelligenceBtn.style.display = 'none';
         if (savePlanBtn) savePlanBtn.style.display = 'none';
