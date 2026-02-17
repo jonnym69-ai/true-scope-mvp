@@ -737,13 +737,20 @@ function initializeAuth() {
     
     onAuthStateChanged(window.firebaseAuth, async (user) => {
         currentUser = user;
+        console.log('Auth state changed:', { 
+            user: !!user, 
+            email: user?.email,
+            uid: user?.uid 
+        });
         
         if (user) {
             // User is signed in
+            console.log('User signed in, loading data...');
             await loadUserData();
             showMainApp();
         } else {
             // User is signed out
+            console.log('User signed out');
             showAuthModal();
         }
     });
@@ -924,11 +931,31 @@ function logoutUser() {
         currentUser = null;
         userSubscription = null;
         userUsageToday = 0;
+        console.log('User logged out');
         location.reload(); // Refresh to reset UI
     }).catch((error) => {
         console.error('Logout error:', error);
     });
 }
+
+// Stripe webhook handler to update subscription after payment
+async function handleStripeWebhook() {
+    // This would be called by your webhook endpoint
+    // For now, let's add a manual subscription check
+    if (currentUser) {
+        console.log('Checking subscription status...');
+        await loadUserData(); // Reload user data to get latest subscription
+        updateUIForUser(); // Update UI with new subscription status
+    }
+}
+
+// Check subscription status periodically
+setInterval(async () => {
+    if (currentUser) {
+        await loadUserData();
+        updateUIForUser();
+    }
+}, 30000); // Check every 30 seconds
 
 function upgradeToPro() {
     if (!currentUser) {
