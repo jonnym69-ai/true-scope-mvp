@@ -835,14 +835,14 @@ function updateUIForUser() {
         viewPortfolioBtn: !!viewPortfolioBtn
     });
     
-    if (userSubscription === 'premium' || userSubscription === 'pro') {
-        console.log('Showing premium features');
+    if (userSubscription === 'premium' || userSubscription === 'pro' || userSubscription === 'studio' || userSubscription === 'enterprise') {
+        console.log('Showing premium features for tier:', userSubscription);
         if (formatSelection) formatSelection.style.display = 'block';
         if (businessIntelligenceBtn) businessIntelligenceBtn.style.display = 'block';
         if (savePlanBtn) savePlanBtn.style.display = 'block';
         if (viewPortfolioBtn) viewPortfolioBtn.style.display = 'block';
     } else {
-        console.log('Hiding premium features');
+        console.log('Hiding premium features for tier:', userSubscription);
         if (formatSelection) formatSelection.style.display = 'none';
         if (businessIntelligenceBtn) businessIntelligenceBtn.style.display = 'none';
         if (savePlanBtn) savePlanBtn.style.display = 'none';
