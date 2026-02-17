@@ -485,11 +485,18 @@ Format this professionally with clear sections, bullet points, and actionable de
         }
 
         // Use OpenAI API to generate dynamic game plan
+        // Note: Add OPENAI_API_KEY to your Vercel environment variables
+        const apiKey = process.env.OPENAI_API_KEY || 'YOUR_OPENAI_API_KEY';
+        
+        if (!apiKey || apiKey === 'YOUR_OPENAI_API_KEY') {
+            return `<h2>🤖 AI Service Unavailable</h2><br><br><p>AI service requires API key. Please contact administrator.</p>`;
+        }
+        
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer YOUR_OPENAI_API_KEY` // Replace with actual key
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
                 model: 'gpt-3.5-turbo',
