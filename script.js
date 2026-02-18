@@ -466,7 +466,7 @@ function generateBasicIdeas() {
     const selected = shuffled.slice(0, 3);
     let html = '<h2>Here are 3 game ideas to spark your creativity!</h2><br><br>';
     selected.forEach(idea => {
-        html += `<h3>${idea.name}</h3><p><strong>Vibe:</strong> ${idea.vibe}</p><ul><li><strong>Core Loop:</strong> ${idea.core}</li><li><strong>Scope:</strong> ${idea.scope}</li></ul><p><strong>Why it works:</strong> ${idea.why}</p><br><br>`;
+        html += '<h3>' + idea.name + '</h3><p><strong>Vibe:</strong> ' + idea.vibe + '</p><ul><li><strong>Core Loop:</strong> ' + idea.core + '</li><li><strong>Scope:</strong> ' + idea.scope + '</li></ul><p><strong>Why it works:</strong> ' + idea.why + '</p><br><br>';
     });
     document.getElementById('output').innerHTML = html;
     document.getElementById('confirmation').innerText = '';
@@ -529,7 +529,7 @@ function generateEnhancedIdeas() {
     const selected = shuffled.slice(0, 3);
     let html = '<h2>Premium Game Ideas (Enhanced Complexity)</h2><br><br>';
     selected.forEach(idea => {
-        html += `<h3>${idea.name}</h3><p><strong>Vibe:</strong> ${idea.vibe}</p><ul><li><strong>Core Loop:</strong> ${idea.core}</li><li><strong>Scope:</strong> ${idea.scope}</li></ul><p><strong>Why it works:</strong> ${idea.why}</p><br><br>`;
+        html += '<h3>' + idea.name + '</h3><p><strong>Vibe:</strong> ' + idea.vibe + '</p><ul><li><strong>Core Loop:</strong> ' + idea.core + '</li><li><strong>Scope:</strong> ' + idea.scope + '</li></ul><p><strong>Why it works:</strong> ' + idea.why + '</p><br><br>';
     });
     document.getElementById('output').innerHTML = html;
     document.getElementById('confirmation').innerText = '';
@@ -752,51 +752,10 @@ async function generateFallbackPlan(userIdea, tool, planType) {
     const variations = generatePlanVariations(keywords, tool, numVariations);
     
     // Format as HTML
-    let plansHtml = `<h2>🎮 Multiple Plan Variations (Algorithm Generated)</h2><h3>Based on: "${userIdea}"</h3><p><strong>Detected Keywords:</strong> ${keywords.genres.join(', ')}, ${keywords.styles.join(', ')}, ${keywords.mechanics.join(', ')}</p><br>`;
+    let plansHtml = '<h2>🎮 Multiple Plan Variations (Algorithm Generated)</h2><h3>Based on: "' + userIdea + '"</h3><p><strong>Detected Keywords:</strong> ' + keywords.genres.join(', ') + ', ' + keywords.styles.join(', ') + ', ' + keywords.mechanics.join(', ') + '</p><br>';
     
     variations.forEach((variation, index) => {
-        plansHtml += `
-            <div class="plan-variation">
-                <h3>📋 Plan ${index + 1}: ${variation.title}</h3>
-                
-                <div class="plan-section">
-                    <h4>🎯 Game Concept</h4>
-                    <p>${variation.concept}</p>
-                </div>
-                
-                <div class="plan-section">
-                    <h4>🛠️ Core Mechanics</h4>
-                    <ul>
-                        ${variation.mechanics.map(m => `<li>${m}</li>`).join('')}
-                    </ul>
-                </div>
-                
-                <div class="plan-section">
-                    <h4>✨ Key Features</h4>
-                    <ul>
-                        ${variation.features.map(f => `<li>${f}</li>`).join('')}
-                    </ul>
-                </div>
-                
-                <div class="plan-section">
-                    <h4>🚀 Development Roadmap</h4>
-                    <ol>
-                        <li><strong>Week 1-2:</strong> Core gameplay prototype</li>
-                        <li><strong>Week 3-4:</strong> Add primary features</li>
-                        <li><strong>Week 5-6:</strong> Implement secondary systems</li>
-                        <li><strong>Week 7-8:</strong> Polish and testing</li>
-                    </ol>
-                </div>
-                
-                <div class="plan-section">
-                    <h4>💻 Technical Requirements</h4>
-                    <p><strong>Engine:</strong> ${tool}</p>
-                    <p><strong>Skills needed:</strong> Basic ${tool} scripting, 2D/3D assets</p>
-                    <p><strong>Estimated scope:</strong> 2-4 months for indie developer</p>
-                </div>
-            </div>
-            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-        `;
+        plansHtml += '\n            <div class="plan-variation">\n                <h3>📋 Plan ' + (index + 1) + ': ' + variation.title + '</h3>\n                \n                <div class="plan-section">\n                    <h4>🎯 Game Concept</h4>\n                    <p>' + variation.concept + '</p>\n                </div>\n                \n                <div class="plan-section">\n                    <h4>🛠️ Core Mechanics</h4>\n                    <ul>\n                        ' + variation.mechanics.map(m => '<li>' + m + '</li>').join('') + '\n                    </ul>\n                </div>\n                \n                <div class="plan-section">\n                    <h4>✨ Key Features</h4>\n                    <ul>\n                        ' + variation.features.map(f => '<li>' + f + '</li>').join('') + '\n                    </ul>\n                </div>\n                \n                <div class="plan-section">\n                    <h4>🚀 Development Roadmap</h4>\n                    <ol>\n                        <li><strong>Week 1-2:</strong> Core gameplay prototype</li>\n                        <li><strong>Week 3-4:</strong> Add primary features</li>\n                        <li><strong>Week 5-6:</strong> Implement secondary systems</li>\n                        <li><strong>Week 7-8:</strong> Polish and testing</li>\n                    </ol>\n                </div>\n                \n                <div class="plan-section">\n                    <h4>💻 Technical Requirements</h4>\n                    <p><strong>Engine:</strong> ' + tool + '</p>\n                    <p><strong>Skills needed:</strong> Basic ' + tool + ' scripting, 2D/3D assets</p>\n                    <p><strong>Estimated scope:</strong> 2-4 months for indie developer</p>\n                </div>\n            </div>\n            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">\n        ';
     });
     
     return plansHtml;
