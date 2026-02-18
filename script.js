@@ -729,20 +729,9 @@ Each plan should be a complete Game Design Document with the following sections:
             }
         } else {
             if (planType === 'detailed') {
-                userPrompt = `Create ${numVariations} different, detailed game development plans for: "${userIdea}". Game type: ${planType}. Development tool: ${tool}. 
-
-Each plan should take a UNIQUE APPROACH within the same game category, having different mechanics, features, and development strategies. Make each plan achievable for beginners, having step-by-step instructions, technical advice, and realistic timeline.
-
-Format each plan clearly as:
-**Plan A: [Approach Name]**
-**Plan B: [Approach Name]**  
-**Plan C: [Approach Name]**
-
-Include folder structure and tool-specific tips for each plan.`;
+                userPrompt = 'Create ' + numVariations + ' different, detailed game development plans for: "' + userIdea + '". Game type: ' + planType + '. Development tool: ' + tool + '. \n\nEach plan should take a UNIQUE APPROACH within the same game category, having different mechanics, features, and development strategies. Make each plan achievable for beginners, having step-by-step instructions, technical advice, and realistic timeline.\n\nFormat each plan clearly as:\n**Plan A: [Approach Name]**\n**Plan B: [Approach Name]**  \n**Plan C: [Approach Name]**\n\nInclude folder structure and tool-specific tips for each plan.';
             } else {
-                userPrompt = `Create ${numVariations} different game development plans for: "${userIdea}". Game type: ${planType}. Development tool: ${tool}. Make it achievable for beginners, having step-by-step instructions, technical advice, and realistic timeline.
-
-Each plan should have a DIFFERENT APPROACH within the same game category. Format clearly as Plan A, Plan B, and Plan C having unique mechanics and strategies. Include folder structure and tool-specific tips.`;
+                userPrompt = 'Create ' + numVariations + ' different game development plans for: "' + userIdea + '". Game type: ' + planType + '. Development tool: ' + tool + '. Make it achievable for beginners, having step-by-step instructions, technical advice, and realistic timeline.\n\nEach plan should have a DIFFERENT APPROACH within the same game category. Format clearly as Plan A, Plan B, and Plan C having unique mechanics and strategies. Include folder structure and tool-specific tips.';
             }
         }
 
