@@ -1550,6 +1550,13 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     window.updateUIForUser = updateUIForUser;
 }
 
+// Global function exposure for HTML onclick handlers
+window.generateIdeas = generateIdeas;
+window.viewPortfolio = showPortfolioModal;
+window.showPortfolioModal = showPortfolioModal;
+window.resetDailyUsage = resetDailyUsage;
+window.testSubscription = testSubscription;
+
 function upgradeToPro() {
     if (!currentUser) {
         alert('Please sign in first to upgrade!');
