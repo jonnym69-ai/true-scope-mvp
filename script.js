@@ -728,7 +728,7 @@ function exportToJSON() {
         }
         
         // Format AI response as HTML
-        return `<h2>🎮 Your AI-Generated Game Plan</h2><br><br><div class="ai-plan">${aiResponse}</div>`;
+        return '<h2>🎮 Your AI-Generated Game Plan</h2><br><br><div class="ai-plan">' + aiResponse + '</div>';
     } catch (error) {
         console.log('AI generation failed, using fallback algorithm:', error);
         // Use keyword-based fallback algorithm
