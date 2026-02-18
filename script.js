@@ -2,7 +2,7 @@
 let currentUser = null;
 let userSubscription = null;
 let userUsageToday = 0;
-const DAILY_LIMIT_FREE = 3;
+const DAILY_LIMIT_FREE = 5;
 
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -295,7 +295,85 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeAuth();
 
 // Generate ideas function
-function generateIdeas() {
+async function generateIdeas() {
+    // Check if premium user for enhanced AI-generated ideas
+    if (userSubscription === 'premium' || userSubscription === 'pro' || userSubscription === 'studio' || userSubscription === 'enterprise') {
+        try {
+            // Use AI to generate complex, premium ideas
+            const systemPrompt = 'You are a creative game design consultant specializing in innovative indie game concepts. Generate ambitious, complex game ideas that push creative boundaries.';
+            const userPrompt = 'Generate 5 complex, ambitious game ideas for premium indie developers. Each idea should have unique mechanics, deeper gameplay systems, multiple layers of engagement, and potential for 2-6 month development cycles. Focus on innovative concepts that could scale to full games. Format each as: **Idea Name** - Detailed description with core mechanics, progression systems, and scope potential.';
+
+            // Try Gemini first
+            const geminiKey = process.env.GEMINI_API_KEY;
+            const openaiKey = process.env.OPENAI_API_KEY;
+
+            let aiResponse;
+            
+            if (geminiKey) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+                            generationConfig: { temperature: 0.8, maxOutputTokens: 1000 }
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        aiResponse = data.candidates[0].content.parts[0].text;
+                    } else {
+                        throw new Error('Gemini failed');
+                    }
+                } catch (error) {
+                    if (openaiKey) {
+                        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${openaiKey}`
+                            },
+                            body: JSON.stringify({
+                                model: 'gpt-3.5-turbo',
+                                messages: [
+                                    { role: 'system', content: systemPrompt },
+                                    { role: 'user', content: userPrompt }
+                                ],
+                                max_tokens: 1000,
+                                temperature: 0.8
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            aiResponse = data.choices[0].message.content;
+                        }
+                    }
+                }
+            }
+            
+            if (aiResponse) {
+                // Format AI response
+                const html = `<h2>🎮 Premium AI-Generated Game Ideas</h2><br><br><div class="ai-ideas">${aiResponse.replace(/\n/g, '<br>')}</div>`;
+                document.getElementById('output').innerHTML = html;
+                document.getElementById('confirmation').innerText = '';
+                return;
+            }
+        } catch (error) {
+            console.log('AI ideas failed, using premium fallback');
+        }
+        
+        // Premium fallback - enhanced static ideas
+        generateEnhancedIdeas();
+    } else {
+        // Free users get basic static ideas
+        generateBasicIdeas();
+    }
+}
+
+// Basic ideas for free users
+function generateBasicIdeas() {
     const ideas = [
         {
             name: "Moon Miner Micro",
@@ -364,6 +442,69 @@ function generateIdeas() {
     const shuffled = ideas.sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
     let html = '<h2>Here are 3 game ideas to spark your creativity!</h2><br><br>';
+    selected.forEach(idea => {
+        html += `<h3>${idea.name}</h3><p><strong>Vibe:</strong> ${idea.vibe}</p><ul><li><strong>Core Loop:</strong> ${idea.core}</li><li><strong>Scope:</strong> ${idea.scope}</li></ul><p><strong>Why it works:</strong> ${idea.why}</p><br><br>`;
+    });
+    document.getElementById('output').innerHTML = html;
+    document.getElementById('confirmation').innerText = '';
+}
+
+// Enhanced ideas for premium users (fallback)
+function generateEnhancedIdeas() {
+    const ideas = [
+        {
+            name: "Galactic Empire Builder",
+            vibe: "Epic strategy, space opera",
+            core: "Colonize planets → manage empire → wage wars",
+            scope: "Multiple star systems, complex diplomacy",
+            why: "Teaches grand strategy and resource management at scale"
+        },
+        {
+            name: "Neural Network Detective",
+            vibe: "Cyberpunk mystery, AI thriller",
+            core: "Hack networks → solve crimes → uncover conspiracies",
+            scope: "City-wide mystery, branching narratives",
+            why: "Combines puzzle-solving with storytelling depth"
+        },
+        {
+            name: "Biomechanical Evolution",
+            vibe: "Sci-fi horror, body horror",
+            core: "Mutate creatures → adapt to environments → survive evolution",
+            scope: "Multiple biomes, procedural generation",
+            why: "Explores emergent gameplay and horror mechanics"
+        },
+        {
+            name: "Quantum Time Weaver",
+            vibe: "Mind-bending puzzle, physics simulation",
+            core: "Manipulate time streams → solve paradoxes → alter reality",
+            scope: "Multi-timeline puzzles, quantum mechanics",
+            why: "Challenges player understanding of cause and effect"
+        },
+        {
+            name: "Sentient City Simulator",
+            vibe: "Urban fantasy, living world",
+            core: "Build city → satisfy citizens → manage supernatural events",
+            scope: "Living city simulation, multiple factions",
+            why: "Combines city-building with narrative and emergent events"
+        },
+        {
+            name: "Dream Realm Architect",
+            vibe: "Surreal adventure, psychological",
+            core: "Shape dreams → navigate subconscious → confront fears",
+            scope: "Infinite dream worlds, psychological depth",
+            why: "Explores player agency in narrative and world-building"
+        },
+        {
+            name: "Nanobot Swarm Commander",
+            vibe: "Real-time strategy, microscopic warfare",
+            core: "Control swarms → micro-manage battles → strategic positioning",
+            scope: "Real-time swarm control, tactical depth",
+            why: "Teaches complex unit management and strategy"
+        }
+    ];
+    const shuffled = ideas.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 3);
+    let html = '<h2>Premium Game Ideas (Enhanced Complexity)</h2><br><br>';
     selected.forEach(idea => {
         html += `<h3>${idea.name}</h3><p><strong>Vibe:</strong> ${idea.vibe}</p><ul><li><strong>Core Loop:</strong> ${idea.core}</li><li><strong>Scope:</strong> ${idea.scope}</li></ul><p><strong>Why it works:</strong> ${idea.why}</p><br><br>`;
     });
@@ -469,74 +610,333 @@ Please structure this as a complete Game Design Document with the following sect
 📊 BUSINESS & MONETIZATION
 - Revenue model and pricing strategy
 - Marketing and launch plan
-- Competitive analysis
-- Risk assessment and mitigation
-
-🛠️ TECHNICAL IMPLEMENTATION
-- Architecture overview
-- Key systems design
-- Performance optimization plan
-- Testing and QA strategy
-
-Format this professionally with clear sections, bullet points, and actionable details.`;
             }
         } else {
-            userPrompt = `Create a detailed game development plan for: ${userIdea}. Game type: ${planType}. Development tool: ${tool}. Make it achievable for beginners, with step-by-step instructions, technical advice, and realistic timeline. Include folder structure and tool-specific tips.`;
+            if (planType === 'detailed') {
+                userPrompt = `Create 3 different, detailed game development plans for: "${userIdea}". Game type: ${planType}. Development tool: ${tool}. 
+
+Each plan should take a UNIQUE APPROACH within the same game category, having different mechanics, features, and development strategies. Make each plan achievable for beginners, having step-by-step instructions, technical advice, and realistic timeline.
+
+Format each plan clearly as:
+**Plan A: [Approach Name]**
+**Plan B: [Approach Name]**  
+**Plan C: [Approach Name]**
+
+Include folder structure and tool-specific tips for each plan.`;
+            } else {
+                userPrompt = `Create 3 different game development plans for: "${userIdea}". Game type: ${planType}. Development tool: ${tool}. Make it achievable for beginners, having step-by-step instructions, technical advice, and realistic timeline.
+
+Each plan should have a DIFFERENT APPROACH within the same game category. Format clearly as Plan A, Plan B, and Plan C having unique mechanics and strategies. Include folder structure and tool-specific tips.`;
+            }
         }
 
-        // Use OpenAI API - production only
-        const apiKey = process.env.OPENAI_API_KEY;
+        // Try Gemini first, fallback to OpenAI
+        const geminiKey = process.env.GEMINI_API_KEY;
+        const openaiKey = process.env.OPENAI_API_KEY;
         
-        if (!apiKey) {
-            return `<h2>🔑 API Key Required</h2><br><br><p>Please add your OpenAI API key to continue.</p><p><strong>Developers:</strong> Add OPENAI_API_KEY to your environment variables.</p><p><strong>Users:</strong> This feature requires a premium subscription.</p>`;
-        }
-        
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    {
-                        role: 'system',
-                        content: systemPrompt
-                    },
-                    {
-                        role: 'user',
-                        content: userPrompt
-                    }
-                ],
-                max_tokens: isPremium ? 2000 : 1500,
-                temperature: 0.7
-            })
+        // Debug logging
+        console.log('Environment check:', {
+            geminiKey: geminiKey ? 'present' : 'missing',
+            openaiKey: openaiKey ? 'present' : 'missing',
+            processEnv: !!process.env
         });
         
-        if (!response.ok) {
-            throw new Error('AI service unavailable');
+        let aiResponse;
+        
+        if (geminiKey) {
+            console.log('Trying Gemini API...');
+            try {
+                // Try Gemini API first
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+                        generationConfig: { temperature: 0.7, maxOutputTokens: isPremium ? 2000 : 1500 }
+                    })
+                });
+                
+                console.log('Gemini response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    aiResponse = data.candidates[0].content.parts[0].text;
+                    console.log('Gemini success!');
+                } else {
+                    const errorData = await response.text();
+                    console.log('Gemini error:', errorData);
+                    throw new Error('Gemini limit reached');
+                }
+            } catch (error) {
+                console.log('Gemini failed, trying OpenAI...', error);
+                
+                if (!openaiKey) {
+                    return `<h2>🔑 API Keys Required</h2><br><br><p>Gemini limit reached. Please add OpenAI API key as backup.</p><p><strong>Get free Gemini key:</strong> <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></p><p><strong>Get OpenAI key:</strong> <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a></p>`;
+                }
+                
+                // Fallback to OpenAI
+                console.log('Trying OpenAI API...');
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${openaiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userPrompt }
+                        ],
+                        max_tokens: isPremium ? 2000 : 1500,
+                        temperature: 0.7
+                    })
+                });
+                
+                console.log('OpenAI response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.log('OpenAI error:', errorData);
+                    throw new Error('Both APIs failed');
+                }
+                
+                const data = await response.json();
+                aiResponse = data.choices[0].message.content;
+                console.log('OpenAI success!');
+            }
+        } else {
+            return `<h2>🔑 API Key Required</h2><br><br><p>Please add Gemini API key to continue.</p><p><strong>Get free key:</strong> <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></p>`;
         }
         
-        const data = await response.json();
-        const aiPlan = data.choices[0].message.content;
-        
         // Format AI response as HTML
-        return `<h2>🎮 Your AI-Generated Game Plan</h2><br><br><div class="ai-plan">${aiPlan}</div>`;
+        return `<h2>🎮 Your AI-Generated Game Plan</h2><br><br><div class="ai-plan">${aiResponse}</div>`;
     } catch (error) {
-        return `<h2>🤖 AI Service Unavailable</h2><br><br><p>Sorry, the AI service is currently unavailable. Please try again later.</p>`;
+        console.log('AI generation failed, using fallback algorithm:', error);
+        // Use keyword-based fallback algorithm
+        return await generateFallbackPlan(userIdea, tool, planType);
     }
 }
 
-// Generate business intelligence function
+// Fallback algorithm for game plan generation - multiple variations
+async function generateFallbackPlan(userIdea, tool, planType) {
+    // Parse keywords from user input
+    const keywords = parseKeywords(userIdea.toLowerCase());
+    
+    // Generate multiple plan variations based on keyword combinations
+    const variations = generatePlanVariations(keywords, tool);
+    
+    // Format as HTML
+    let plansHtml = `<h2>🎮 Multiple Plan Variations (Algorithm Generated)</h2><h3>Based on: "${userIdea}"</h3><p><strong>Detected Keywords:</strong> ${keywords.genres.join(', ')}, ${keywords.styles.join(', ')}, ${keywords.mechanics.join(', ')}</p><br>`;
+    
+    variations.forEach((variation, index) => {
+        plansHtml += `
+            <div class="plan-variation">
+                <h3>📋 Plan ${index + 1}: ${variation.title}</h3>
+                
+                <div class="plan-section">
+                    <h4>🎯 Game Concept</h4>
+                    <p>${variation.concept}</p>
+                </div>
+                
+                <div class="plan-section">
+                    <h4>🛠️ Core Mechanics</h4>
+                    <ul>
+                        ${variation.mechanics.map(m => `<li>${m}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="plan-section">
+                    <h4>✨ Key Features</h4>
+                    <ul>
+                        ${variation.features.map(f => `<li>${f}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="plan-section">
+                    <h4>🚀 Development Roadmap</h4>
+                    <ol>
+                        <li><strong>Week 1-2:</strong> Core gameplay prototype</li>
+                        <li><strong>Week 3-4:</strong> Add primary features</li>
+                        <li><strong>Week 5-6:</strong> Implement secondary systems</li>
+                        <li><strong>Week 7-8:</strong> Polish and testing</li>
+                    </ol>
+                </div>
+                
+                <div class="plan-section">
+                    <h4>💻 Technical Requirements</h4>
+                    <p><strong>Engine:</strong> ${tool}</p>
+                    <p><strong>Skills needed:</strong> Basic ${tool} scripting, 2D/3D assets</p>
+                    <p><strong>Estimated scope:</strong> 2-4 months for indie developer</p>
+                </div>
+            </div>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+        `;
+    });
+    
+    return plansHtml;
+}
+
+// Parse keywords from user input
+function parseKeywords(text) {
+    const genres = [];
+    const styles = [];
+    const mechanics = [];
+    
+    // Genre keywords
+    const genreKeywords = {
+        'adventure': 'adventure',
+        'puzzle': 'puzzle',
+        'rpg': 'rpg',
+        'role': 'rpg',
+        'shooter': 'shooter',
+        'shoot': 'shooter',
+        'racing': 'racing',
+        'race': 'racing',
+        'simulation': 'simulation',
+        'sim': 'simulation',
+        'platform': 'platformer',
+        'jump': 'platformer',
+        'strategy': 'strategy',
+        'battle': 'strategy'
+    };
+    
+    // Style keywords
+    const styleKeywords = {
+        'space': 'space',
+        'sci': 'sci-fi',
+        'fantasy': 'fantasy',
+        'cyberpunk': 'cyberpunk',
+        'horror': 'horror',
+        'medieval': 'medieval',
+        'modern': 'modern',
+        'future': 'futuristic'
+    };
+    
+    // Mechanic keywords
+    const mechanicKeywords = {
+        'match': 'match-3',
+        'physics': 'physics',
+        'craft': 'crafting',
+        'build': 'building',
+        'explore': 'exploration',
+        'combat': 'combat',
+        'stealth': 'stealth'
+    };
+    
+    // Parse
+    Object.keys(genreKeywords).forEach(key => {
+        if (text.includes(key) && !genres.includes(genreKeywords[key])) {
+            genres.push(genreKeywords[key]);
+        }
+    });
+    
+    Object.keys(styleKeywords).forEach(key => {
+        if (text.includes(key) && !styles.includes(styleKeywords[key])) {
+            styles.push(styleKeywords[key]);
+        }
+    });
+    
+    Object.keys(mechanicKeywords).forEach(key => {
+        if (text.includes(key) && !mechanics.includes(mechanicKeywords[key])) {
+            mechanics.push(mechanicKeywords[key]);
+        }
+    });
+    
+    // Defaults if none found
+    if (genres.length === 0) genres.push('casual');
+    if (styles.length === 0) styles.push('generic');
+    if (mechanics.length === 0) mechanics.push('tap');
+    
+    return { genres, styles, mechanics };
+}
+
+// Generate plan variations based on keywords
+function generatePlanVariations(keywords, tool) {
+    const variations = [];
+    const numVariations = Math.min(8, keywords.genres.length * keywords.styles.length * keywords.mechanics.length || 5);
+    
+    for (let i = 0; i < numVariations; i++) {
+        const genre = keywords.genres[i % keywords.genres.length];
+        const style = keywords.styles[i % keywords.styles.length];
+        const mechanic = keywords.mechanics[i % keywords.mechanics.length];
+        
+        const variation = createPlanVariation(genre, style, mechanic, tool);
+        variations.push(variation);
+    }
+    
+    return variations;
+}
+
+// Create a single plan variation
+function createPlanVariation(genre, style, mechanic, tool) {
+    const title = `${capitalize(style)} ${capitalize(genre)} with ${capitalize(mechanic)} Mechanics`;
+    
+    const concept = `A ${genre} game set in a ${style} world, featuring ${mechanic} gameplay mechanics.`;
+    
+    const mechanics = getMechanicDetails(mechanic, genre);
+    const features = getFeatureDetails(genre, style, mechanic);
+    
+    return { title, concept, mechanics, features };
+}
+
+// Helper functions for plan details
+function getMechanicDetails(mechanic, genre) {
+    const mechanicMap = {
+        'match-3': ['Tile matching and swapping', 'Combo chain creation', 'Score multipliers'],
+        'physics': ['Object manipulation with physics', 'Gravity and momentum', 'Precise timing'],
+        'crafting': ['Resource gathering and combination', 'Recipe discovery', 'Item progression'],
+        'building': ['Structure construction', 'Resource management', 'Expansion planning'],
+        'exploration': ['World navigation', 'Discovery mechanics', 'Mapping systems'],
+        'combat': ['Attack and defense systems', 'Weapon selection', 'Strategy positioning'],
+        'stealth': ['Detection avoidance', 'Shadow mechanics', 'Silent takedowns'],
+        'tap': ['Simple input interactions', 'Timing-based challenges', 'Progressive difficulty']
+    };
+    
+    return mechanicMap[mechanic] || mechanicMap['tap'];
+}
+
+function getFeatureDetails(genre, style, mechanic) {
+    const features = [];
+    
+    // Add genre-specific features
+    if (genre === 'puzzle') features.push('Multiple puzzle types', 'Hint system', 'Solution tracking');
+    else if (genre === 'adventure') features.push('Story-driven progression', 'Multiple paths', 'Collectible items');
+    else if (genre === 'rpg') features.push('Character progression', 'Skill trees', 'Inventory management');
+    else if (genre === 'shooter') features.push('Weapon upgrades', 'Enemy variety', 'Cover systems');
+    else if (genre === 'racing') features.push('Vehicle customization', 'Track variety', 'Time challenges');
+    else if (genre === 'platformer') features.push('Precise controls', 'Power-ups', 'Boss battles');
+    else features.push('Score system', 'Achievement unlocks', 'Progressive challenges');
+    
+    // Add style-specific features
+    if (style === 'space') features.push('Zero-gravity mechanics', 'Alien environments');
+    else if (style === 'fantasy') features.push('Magic systems', 'Mythical creatures');
+    else if (style === 'cyberpunk') features.push('Hacking mechanics', 'Neon aesthetics');
+    else if (style === 'horror') features.push('Atmospheric tension', 'Jump scares');
+    
+    // Add mechanic-specific features
+    if (mechanic === 'physics') features.push('Destructible environments', 'Realistic simulations');
+    else if (mechanic === 'match-3') features.push('Power-up collection', 'Level objectives');
+    
+    return features.slice(0, 3); // Limit to 3 features
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 async function generateBusinessIntelligence(idea, tool) {
+    // Add null check for idea parameter
+    if (!idea || typeof idea !== 'string') {
+        return `<h2>📊 Business Intelligence Analysis</h2><p><strong>Error:</strong> No game idea provided. Please generate a game plan first.</p>`;
+    }
+    
     // Mock business intelligence analysis
     return `
         <h2>📊 Business Intelligence Analysis</h2>
         <h3>Market Analysis for "${idea}"</h3>
         <div class="bi-section">
             <h4>🎯 Target Market</h4>
-            <p>Based on your game concept, the primary target audience appears to be indie game enthusiasts aged 18-35 who enjoy ${idea.includes('puzzle') ? 'brain-teasing challenges' : idea.includes('rpg') ? 'story-driven experiences' : 'action-oriented gameplay'}.</p>
+            <p>Based on your game concept, the primary target audience appears to be indie game enthusiasts aged 18-35 who enjoy ${idea && idea.includes('puzzle') ? 'brain-teasing challenges' : idea && idea.includes('rpg') ? 'story-driven experiences' : 'action-oriented gameplay'}.</p>
             
             <h4>📈 Market Size</h4>
             <p>The indie game market represents approximately $XX billion annually, with niche segments for ${tool}-based games showing strong growth potential.</p>
@@ -570,14 +970,53 @@ async function savePlanToPortfolio(planData) {
     
     const { collection, addDoc } = window.firebaseFunctions;
     
-    // Save to user's plans subcollection
-    const plansRef = collection(window.firebaseDb, 'users', currentUser.uid, 'plans');
-    
-    await addDoc(plansRef, {
+    // Enhanced project structure for game development hub
+    const enhancedProjectData = {
         ...planData,
+        developmentPhases: {
+            concept: { status: 'completed', details: planData.aiPlan },
+            design: { status: 'pending', assets: [], timeline: '2-4 weeks' },
+            prototype: { status: 'pending', features: [], timeline: '4-8 weeks' },
+            development: { status: 'pending', milestones: [], timeline: '8-16 weeks' },
+            testing: { status: 'pending', testPlan: [], timeline: '2-4 weeks' },
+            launch: { status: 'pending', marketingPlan: [], timeline: '1-2 weeks' }
+        },
+        exportOptions: {
+            unity: { compatible: true, folderStructure: 'Assets/Scripts/Prefabs' },
+            unreal: { compatible: true, folderStructure: 'Content/Blueprints/Materials' },
+            godot: { compatible: true, folderStructure: 'res://scenes/scripts/assets' },
+            windsurf: { compatible: true, folderStructure: 'src/assets/components' }
+        },
+        projectMetrics: {
+            complexity: planData.idea.includes('simple') ? 'beginner' : 'intermediate',
+            estimatedTime: '3-6 months',
+            teamSize: '1-3 developers',
+            budget: 'indie ($0-10k)'
+        },
         createdAt: new Date(),
-        updatedAt: new Date()
-    });
+        updatedAt: new Date(),
+        userId: currentUser.uid
+    };
+    
+    await addDoc(collection(window.firebaseDb, 'gameProjects'), enhancedProjectData);
+    
+    // Show success with development hub features
+    const confirmation = document.getElementById('save-confirmation');
+    if (confirmation) {
+        confirmation.innerHTML = `
+            <div style="background: #4CAF50; color: white; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <h4>🎮 Project Saved to Development Hub!</h4>
+                <p><strong>Next Steps:</strong></p>
+                <ul style="margin: 5px 0; padding-left: 20px;">
+                    <li>📋 Track development phases</li>
+                    <li>📤 Export to Unity/Unreal/Godot</li>
+                    <li>📊 Monitor project metrics</li>
+                    <li>🔄 Update progress anytime</li>
+                </ul>
+            </div>
+        `;
+        setTimeout(() => confirmation.innerHTML = '', 5000);
+    }
 }
 
 async function loadUserPortfolio() {
@@ -808,6 +1247,78 @@ async function createUserData() {
     userUsageToday = 0;
 }
 
+// Reset daily usage (for development testing)
+async function resetDailyUsage() {
+    if (!currentUser) {
+        alert('Please sign in first');
+        return;
+    }
+    
+    try {
+        await updateUserData({ 
+            usageToday: 0,
+            lastUsageDate: new Date().toDateString()
+        });
+        userUsageToday = 0;
+        
+        const conf = document.getElementById('confirmation');
+        if (conf) {
+            conf.innerHTML = '✅ Daily usage reset! You now have 5 free plans remaining.';
+            setTimeout(() => conf.innerHTML = '', 3000);
+        }
+        
+        // Update UI
+        updateUIForUser();
+        
+        console.log('Daily usage reset successfully');
+    } catch (error) {
+        console.error('Error resetting usage:', error);
+        alert('Failed to reset usage. Please try again.');
+    }
+}
+
+// Add reset button to UI (development only)
+function addResetButton() {
+    const existing = document.querySelector('.reset-usage');
+    if (existing) existing.remove();
+    
+    const main = document.querySelector('main');
+    if (main) {
+        const resetDiv = document.createElement('div');
+        resetDiv.className = 'reset-usage';
+        resetDiv.innerHTML = `
+            <button onclick="resetDailyUsage()" style="
+                background: #ff6b6b; 
+                color: white; 
+                border: none; 
+                padding: 8px 16px; 
+                border-radius: 4px; 
+                margin: 10px 0; 
+                cursor: pointer;
+                font-size: 12px;
+            ">🔄 Reset Daily Usage (Dev)</button>
+        `;
+        main.insertBefore(resetDiv, main.firstChild);
+    }
+}
+
+// Test subscription function for development
+function testSubscription(tier) {
+    console.log('Testing subscription tier:', tier);
+    userSubscription = tier;
+    updateUIForUser();
+}
+
+// Global function exposure
+window.resetDailyUsage = resetDailyUsage;
+window.updateUIForUser = updateUIForUser;
+window.testSubscription = testSubscription;
+window.showPortfolioModal = showPortfolioModal;
+window.viewPortfolio = viewPortfolio;
+window.viewPortfolioPlan = viewPortfolioPlan;
+window.deletePortfolioPlan = deletePortfolioPlan;
+window.generateBusinessIntelligence = generateBusinessIntelligence;
+
 function updateUIForUser() {
     console.log('updateUIForUser called, userSubscription:', userSubscription);
     
@@ -854,7 +1365,7 @@ function updateUIForUser() {
         if (viewPortfolioBtn) {
             viewPortfolioBtn.style.display = 'block';
             viewPortfolioBtn.disabled = false;
-            viewPortfolioBtn.onclick = viewPortfolio;
+            viewPortfolioBtn.onclick = showPortfolioModal;
         }
     } else {
         console.log('Showing disabled premium features for free tier');
@@ -904,6 +1415,9 @@ function updateUIForUser() {
     if (userSubscription === 'free') {
         addUsageLimitUI();
     }
+    
+    // Add reset button for development
+    addResetButton();
 }
 
 function addUserAccountUI() {
@@ -1030,11 +1544,7 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     document.body.appendChild(testDiv);
     
     // Make function globally available
-    window.testSubscription = function(tier) {
-        console.log('Testing subscription tier:', tier);
-        userSubscription = tier;
-        updateUIForUser();
-    };
+    // testSubscription is already defined above
     
     // Make updateUIForUser globally available for HTML onclick handlers
     window.updateUIForUser = updateUIForUser;

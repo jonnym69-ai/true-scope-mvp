@@ -10,7 +10,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, orderBy, where, getDocs, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         
         // Firebase configuration
         const firebaseConfig = {
@@ -28,10 +28,25 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Make these available globally
-        window.firebaseAuth = auth;
+        // Make functions available globally
         window.firebaseDb = db;
-        window.firebaseFunctions = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, limit };
+        window.firebaseAuth = auth;
+        window.firebaseFunctions = { 
+            onAuthStateChanged, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            signOut,
+            doc, 
+            getDoc, 
+            setDoc, 
+            updateDoc, 
+            collection, 
+            query, 
+            orderBy,
+            where, 
+            getDocs, 
+            limit 
+        };
     </script>
     <!-- Stripe SDK -->
     <script src="https://js.stripe.com/v3/"></script>
