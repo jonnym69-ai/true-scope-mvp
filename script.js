@@ -582,7 +582,7 @@ function exportToMarkdown() {
     }
     
     const content = element.innerText;
-    const markdownContent = `# Game Development Plan\n\n${content.replace(/\n\n/g, '\n\n').replace(/\n/g, '\n\n')}`;
+    const markdownContent = '# Game Development Plan\n\n' + content.replace(/\n\n/g, '\n\n').replace(/\n/g, '\n\n');
     
     const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -858,9 +858,9 @@ function generatePlanVariations(keywords, tool, numVariations = 30) {
 
 // Create a single plan variation
 function createPlanVariation(genre, style, mechanic, tool) {
-    const title = `${capitalize(style)} ${capitalize(genre)} with ${capitalize(mechanic)} Mechanics`;
+    const title = capitalize(style) + ' ' + capitalize(genre) + ' with ' + capitalize(mechanic) + ' Mechanics';
     
-    const concept = `A ${genre} game set in a ${style} world, featuring ${mechanic} gameplay mechanics.`;
+    const concept = 'A ' + genre + ' game set in a ' + style + ' world, featuring ' + mechanic + ' gameplay mechanics.';
     
     const mechanics = getMechanicDetails(mechanic, genre);
     const features = getFeatureDetails(genre, style, mechanic);
@@ -919,37 +919,7 @@ async function generateBusinessIntelligence(idea, tool) {
     }
     
     // Mock business intelligence analysis
-    return `
-        <h2>📊 Business Intelligence Analysis</h2>
-        <h3>Market Analysis for "${idea}"</h3>
-        <div class="bi-section">
-            <h4>🎯 Target Market</h4>
-            <p>Based on your game concept, the primary target audience appears to be indie game enthusiasts aged 18-35 who enjoy ${idea && idea.includes('puzzle') ? 'brain-teasing challenges' : idea && idea.includes('rpg') ? 'story-driven experiences' : 'action-oriented gameplay'}.</p>
-            
-            <h4>📈 Market Size</h4>
-            <p>The indie game market represents approximately $XX billion annually, with niche segments for ${tool}-based games showing strong growth potential.</p>
-            
-            <h4>🏆 Competitive Landscape</h4>
-            <p>Key competitors include established titles in the ${idea.includes('puzzle') ? 'puzzle' : idea.includes('rpg') ? 'RPG' : 'action'} genre. Your unique value proposition focuses on ${idea.includes('tiny') ? 'minimalist, achievable scope' : 'innovative mechanics'}.</p>
-        </div>
-        
-        <div class="bi-section">
-            <h4>💰 Revenue Projections</h4>
-            <p><strong>Year 1:</strong> $XX,XXX - $XX,XXX</p>
-            <p><strong>Year 2:</strong> $XX,XXX - $XX,XXX</p>
-            <p><strong>Year 3:</strong> $XX,XXX - $XX,XXX</p>
-            
-            <h4>🎮 Monetization Strategy</h4>
-            <p>Recommended approach: Premium pricing ($X.XX) with potential for DLC/expansions based on market reception.</p>
-        </div>
-        
-        <div class="bi-section">
-            <h4>🚀 Launch Strategy</h4>
-            <p><strong>Phase 1:</strong> Soft launch on ${tool} marketplace</p>
-            <p><strong>Phase 2:</strong> Marketing push targeting indie game communities</p>
-            <p><strong>Phase 3:</strong> Platform expansion based on performance</p>
-        </div>
-    `;
+    return '<h2>📊 Business Intelligence Analysis</h2><h3>Market Analysis for "' + idea + '"</h3><div class="bi-section"><h4>🎯 Target Market</h4><p>Based on your game concept, the primary target audience appears to be indie game enthusiasts aged 18-35 who enjoy ' + (idea && idea.includes('puzzle') ? 'brain-teasing challenges' : idea && idea.includes('rpg') ? 'story-driven experiences' : 'action-oriented gameplay') + '.</p><h4>📈 Market Size</h4><p>The indie game market represents approximately $XX billion annually, with niche segments for ' + tool + '-based games showing strong growth potential.</p><h4>🏆 Competitive Landscape</h4><p>Key competitors include established titles in the ' + (idea.includes('puzzle') ? 'puzzle' : idea.includes('rpg') ? 'RPG' : 'action') + ' genre. Your unique value proposition focuses on ' + (idea.includes('tiny') ? 'minimalist, achievable scope' : 'innovative mechanics') + '.</p></div><div class="bi-section"><h4>💰 Revenue Projections</h4><p><strong>Year 1:</strong> $XX,XXX - $XX,XXX</p><p><strong>Year 2:</strong> $XX,XXX - $XX,XXX</p><p><strong>Year 3:</strong> $XX,XXX - $XX,XXX</p><h4>🎮 Monetization Strategy</h4><p>Recommended approach: Premium pricing ($X.XX) with potential for DLC/expansions based on market reception.</p></div><div class="bi-section"><h4>🚀 Launch Strategy</h4><p><strong>Phase 1:</strong> Soft launch on ' + tool + ' marketplace</p><p><strong>Phase 2:</strong> Marketing push targeting indie game communities</p><p><strong>Phase 3:</strong> Platform expansion based on performance</p></div>';
 }
 
 // Portfolio management functions
